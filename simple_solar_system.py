@@ -53,13 +53,13 @@ class SolarSystem(object):
                ylim=(-1e12, 1e12), 
                xlabel='x (m)',
                ylabel='y (m)')
-        ax.set_title('Simulation length: 11.5 years')
+        ax.set_title(f'Simulation length: {self.N/365:.1f} years')
         ax.legend(loc=2)
-
+        plt.show()
         fig.savefig('Figures/simple_solar_system.png', dpi=600)
 
 def main():
-    sim = SolarSystem(N=int(365*11.5), dt=60 * 60 * 24)
+    sim = SolarSystem(N=int(365*23.5), dt=60 * 60 * 24)
     sim.simulate()
     sim.savePlot()
 

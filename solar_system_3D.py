@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 
@@ -29,58 +30,19 @@ class Celestial(object):
 
 class SolarSystem(object):
     def __init__(self, N, dt):
-        earth_inclination = np.radians(0.0)
-        self.Earth = Celestial(
-            startPosition=[149.6e9, 0, 0],
-            startVelocity=[0, 29.8e3, 0],
-            mass=0.330e24,
-            N=N
-        )
+        startPositions = pd.read_csv("Data/planetData.csv", header=0, index_col=0)
+        for planet, pos in startPositions.iterrows():
+            setattr(self, planet,  Celestial(
+                startPosition= pos.loc[['x','y','z']].values,
+                startVelocity= pos.loc[['Vx','Vy','Vz']].values,
+                mass=pos.loc[['M']].values,
+                N=N
+            ))
 
         self.Sun = Celestial(
             startPosition=[0, 0, 0],
             startVelocity=[0, 0, 0],
             mass=1.989e30,
-            N=N
-        )
-
-        mars_inclination = np.radians(1.9)
-        self.Mars = Celestial(
-            startPosition=[227.9e9, 0, 227.9e9 * np.sin(mars_inclination)],
-            startVelocity=[0, 24.1e3, 24.1e3 * np.sin(mars_inclination)],
-            mass=0.642e24,
-            N=N
-        )
-
-        jupiter_inclination = np.radians(1.3)
-        self.Jupiter = Celestial(
-            startPosition=[778.5e9, 0, 778.5e9 * np.sin(jupiter_inclination)],
-            startVelocity=[0, 13.1e3, 13.1e3 * np.sin(jupiter_inclination)],
-            mass=1898e24,
-            N=N
-        )
-
-        saturn_inclination = np.radians(2.5)
-        self.Saturn = Celestial(
-            startPosition=[1433.5e9, 0, 1433.5e9 * np.sin(saturn_inclination)],
-            startVelocity=[0, 9.7e3, 9.7e3 * np.sin(saturn_inclination)],
-            mass=568e24,
-            N=N
-        )
-
-        uranus_inclination = np.radians(0.8)
-        self.Uranus = Celestial(
-            startPosition=[2872.5e9, 0, 2872.5e9 * np.sin(uranus_inclination)],
-            startVelocity=[0, 6.8e3, 6.8e3 * np.sin(uranus_inclination)],
-            mass=86.8e24,
-            N=N
-        )
-
-        neptune_inclination = np.radians(1.8)
-        self.Neptune = Celestial(
-            startPosition=[4495.1e9, 0, 4495.1e9 * np.sin(neptune_inclination)],
-            startVelocity=[0, 5.4e3, 5.4e3 * np.sin(neptune_inclination)],
-            mass=102e24,
             N=N
         )
 
@@ -144,6 +106,12 @@ class SolarSystem(object):
 
             saturn_plot.set_data(self.Saturn.position[frame, 0], self.Saturn.position[frame, 1])
             saturn_plot.set_3d_properties(self.Saturn.position[frame, 2])
+
+            uranus_plot.set_data(self.Uranus.position[frame, 0], self.Uranus.position[frame, 1])
+            uranus_plot.set_3d_properties(self.Uranus.position[frame, 2])
+
+            neptune_plot.set_data(self.Neptune.position[frame, 0], self.Neptune.position[frame, 1])
+            neptune_plot.set_3d_properties(self.Neptune.position[frame, 2])
 
             # update trails
             earth_trail.set_data(self.Earth.position[:frame, 0], self.Earth.position[:frame, 1])
