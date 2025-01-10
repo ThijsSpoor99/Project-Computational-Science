@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.animation import FuncAnimation
+from matplotlib.animation import FuncAnimation, PillowWriter
 
 def acceleration(rVec, M, G=6.674e-11):
     r = np.linalg.norm(rVec)
@@ -95,23 +95,23 @@ class SolarSystem(object):
             sun_plot.set_data([0], [0])
             sun_plot.set_3d_properties([0])
 
-            earth_plot.set_data(self.Earth.position[frame, 0], self.Earth.position[frame, 1])
-            earth_plot.set_3d_properties(self.Earth.position[frame, 2])
+            earth_plot.set_data([self.Earth.position[frame, 0]], [self.Earth.position[frame, 1]])
+            earth_plot.set_3d_properties([self.Earth.position[frame, 2]])
 
-            jupiter_plot.set_data(self.Jupiter.position[frame, 0], self.Jupiter.position[frame, 1])
-            jupiter_plot.set_3d_properties(self.Jupiter.position[frame, 2])
+            jupiter_plot.set_data([self.Jupiter.position[frame, 0]], [self.Jupiter.position[frame, 1]])
+            jupiter_plot.set_3d_properties([self.Jupiter.position[frame, 2]])
 
-            mars_plot.set_data(self.Mars.position[frame, 0], self.Mars.position[frame, 1])
-            mars_plot.set_3d_properties(self.Mars.position[frame, 2])
+            mars_plot.set_data([self.Mars.position[frame, 0]], [self.Mars.position[frame, 1]])
+            mars_plot.set_3d_properties([self.Mars.position[frame, 2]])
 
-            saturn_plot.set_data(self.Saturn.position[frame, 0], self.Saturn.position[frame, 1])
-            saturn_plot.set_3d_properties(self.Saturn.position[frame, 2])
+            saturn_plot.set_data([self.Saturn.position[frame, 0]], [self.Saturn.position[frame, 1]])
+            saturn_plot.set_3d_properties([self.Saturn.position[frame, 2]])
 
-            uranus_plot.set_data(self.Uranus.position[frame, 0], self.Uranus.position[frame, 1])
-            uranus_plot.set_3d_properties(self.Uranus.position[frame, 2])
+            uranus_plot.set_data([self.Uranus.position[frame, 0]], [self.Uranus.position[frame, 1]])
+            uranus_plot.set_3d_properties([self.Uranus.position[frame, 2]])
 
-            neptune_plot.set_data(self.Neptune.position[frame, 0], self.Neptune.position[frame, 1])
-            neptune_plot.set_3d_properties(self.Neptune.position[frame, 2])
+            neptune_plot.set_data([self.Neptune.position[frame, 0]], [self.Neptune.position[frame, 1]])
+            neptune_plot.set_3d_properties([self.Neptune.position[frame, 2]])
 
             # update trails
             earth_trail.set_data(self.Earth.position[:frame, 0], self.Earth.position[:frame, 1])
@@ -134,11 +134,11 @@ class SolarSystem(object):
 
             return sun_plot, earth_plot, jupiter_plot, mars_plot, saturn_plot, earth_trail, jupiter_trail, mars_trail, saturn_trail, uranus_trail, neptune_trail
 
-        ani = FuncAnimation(fig, update, frames=range(0, self.N,200), init_func=init, blit=False, interval=1)
-        plt.show()
-
+        ani = FuncAnimation(fig, update, frames=range(0, self.N,200), init_func=init, blit=False, interval=100)
+        ani.save("Figures/solar_system_3D.gif", writer=PillowWriter(fps=30))
+        
 def main():
-    sim = SolarSystem(N=int(365 * 500), dt=60 * 60 * 24)  # simulate for 500 years
+    sim = SolarSystem(N=int(365 * 100), dt=60 * 60 * 24)  # simulate for 100 years
     sim.simulate()
     sim.animate()
 
