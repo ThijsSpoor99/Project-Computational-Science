@@ -86,19 +86,19 @@ public:
     // constructor
     // & means reference
     Celestial(std::string inputName,
-            const std::array<double, 3>& startPos, 
-            const std::array<double, 3>& startVel, 
-            double inputMass,
-            size_t nSteps
-            )
+              const std::array<double, 3>& startPos, 
+              const std::array<double, 3>& startVel, 
+              double inputMass,
+              size_t nSteps
+              )
 
-            // constructor list
-            : 
-            name(inputName), 
-            mass(inputMass), 
-            GM(Constants::G * inputMass)
+              // constructor list
+              : 
+              name(inputName), 
+              mass(inputMass), 
+              GM(Constants::G * inputMass)
                 
-    {
+        {
         // resize arrays
         position.resize(nSteps);
         velocity.resize(nSteps);
@@ -106,7 +106,7 @@ public:
         // set starting conditions
         position[0] = startPos;
         velocity[0] = startVel;
-    }
+        }
 
     // convert to json style
     json toJson() const {
@@ -123,18 +123,21 @@ public:
     // set variables that should not change
     const int nPlanets = 8;
     const int dt = 86400;
-    const int nSteps = 365*1000;
+    const int nSteps = 365*12;
 
     // vector allows dynamic resizing and memory allocation (but slower)
     Celestial Sun;
     std::vector<Celestial> planets;
     std::vector<Celestial> centaurs;
 
-    std::vector<std::vector<std::string>> planetData = getPlanetData();
+    std::vector<std::vector<std::string>> planetData;
 
     // constructor
     SolarSystem() 
-        :Sun(Celestial("Sun", {0, 0, 0}, {0, 0, 0}, 1.989e30, nSteps)) 
+        :
+        Sun(Celestial("Sun", {0, 0, 0}, {0, 0, 0}, 1.989e30, nSteps)),
+        planetData(getPlanetData()) 
+
     {
         for (int i = 0; i < nPlanets; i++) {
             planets.push_back(Celestial(
@@ -153,9 +156,9 @@ public:
             for (int j = 0; j < nPlanets; j++) {
                 if (i != j) {
                     std::array<double, 3> rVec;
-                    rVec[0] = planets[i].position[0][0] - planets[j].position[0][0]; 
-                    rVec[1] = planets[i].position[0][1] - planets[j].position[0][1]; 
-                    rVec[2] = planets[i].position[0][2] - planets[j].position[0][2]; 
+                    rVec[0] = planets[i].position[t-1][0] - planets[j].position[t-1][0]; 
+                    rVec[1] = planets[i].position[t-1][1] - planets[j].position[t-1][1]; 
+                    rVec[2] = planets[i].position[t-1][2] - planets[j].position[t-1][2]; 
 
                     std::array<double, 3> aVec = acceleration(rVec, planets[j].GM);
 
@@ -172,17 +175,17 @@ public:
     }
 
     void simulate() {
-        for (int t=1; t < nSteps + 1; t++) {
+        std::cout << "Simulating..." << std::endl;
+        for (int t=1; t < nSteps; t++) {
             updatePlanets(t);
         }
     }
 
     void savePlanetSimulation() {
         std::vector<json> planetsJson; 
-        std::cout << nPlanets << std::endl;
 
         for (int i = 0; i < nPlanets; i++) {
-            std::cout << "Processing planet " << i + 1 << "..." << std::endl;
+            std::cout << "Processing planet " << i + 1 << " of " << nPlanets << std::endl;
             planetsJson.push_back(planets[i].toJson());
         }
 
@@ -202,7 +205,6 @@ int main() {
     SolarSystem sim;
 
     sim.simulate();
-
     sim.savePlanetSimulation();
 
     return 0;
