@@ -171,8 +171,6 @@ cython_debug/
 .pypirc
 
 # Other
-test.py
 *.gif
-test.cpp
-test.exe
+test.*
 planets.json
