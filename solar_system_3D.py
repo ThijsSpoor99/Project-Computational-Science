@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation, PillowWriter
+from joblib import Parallel, delayed
 
 def acceleration(rVec, M, G=6.674e-11):
     r = np.linalg.norm(rVec)
@@ -28,114 +29,96 @@ class Celestial(object):
             )
         self.position[i] = self.position[i-1] + dt * self.velocity[i]
 
-class SolarSystem(object):
+class SolarSystem:
     def __init__(self, N, dt):
-        startPositions = pd.read_csv("Data/planetData.csv", header=0, index_col=0)
-        for planet, pos in startPositions.iterrows():
-            setattr(self, planet,  Celestial(
-                startPosition= pos.loc[['x','y','z']].values,
-                startVelocity= pos.loc[['Vx','Vy','Vz']].values,
-                mass=pos.loc[['M']].values,
+        self.planets = {}
+        startPositionsPlanets = pd.read_csv("Data/planetData.csv", header=0, index_col=0)
+        for planet, pos in startPositionsPlanets.iterrows():
+            self.planets[planet] = Celestial(
+                startPosition=pos.loc[['x', 'y', 'z']].values,
+                startVelocity=pos.loc[['Vx', 'Vy', 'Vz']].values,
+                mass=pos.loc['M'],
                 N=N
-            ))
-
-        self.Sun = Celestial(
+            )
+        self.asteroids = {}
+        startPositionsAsteroids = pd.read_csv("Data/CentaursCartesian.csv", header=0, index_col=0).head(50)
+        for asteroid, pos in startPositionsAsteroids.iterrows():
+            self.asteroids[asteroid] = Celestial(
+                startPosition=pos.loc[['x', 'y', 'z']].values,
+                startVelocity=pos.loc[['Vx', 'Vy', 'Vz']].values,
+                mass=1,  # Massless assumption
+                N=N
+            )
+        self.planets["Sun"] = Celestial(
             startPosition=[0, 0, 0],
             startVelocity=[0, 0, 0],
             mass=1.989e30,
             N=N
         )
-
         self.N = N
         self.dt = dt
 
+    
     def simulate(self):
         for i in range(1, self.N):
-            self.Earth.update([self.Sun, self.Jupiter, self.Mars, self.Saturn, self.Neptune], i, self.dt)
-            self.Jupiter.update([self.Sun, self.Earth, self.Mars, self.Saturn, self.Uranus, self.Neptune], i, self.dt)
-            self.Mars.update([self.Sun, self.Earth, self.Jupiter, self.Saturn, self.Uranus, self.Neptune], i, self.dt)
-            self.Saturn.update([self.Sun, self.Earth, self.Jupiter, self.Mars, self.Uranus, self.Neptune], i, self.dt)
-            self.Uranus.update([self.Sun, self.Earth, self.Jupiter, self.Mars, self.Saturn, self.Neptune], i, self.dt)
-            self.Neptune.update([self.Sun, self.Earth, self.Jupiter, self.Mars, self.Saturn, self.Uranus], i, self.dt)
+            #update planets
+            for name, body in self.planets.items():
+                other_planets = [obj for planet, obj in self.planets.items() if planet != name]
+                body.update(other_planets, i, self.dt)
+            
+            #update asteroids
+            for name, body in self.asteroids.items():
+                body.update(self.planets.values(), i, self.dt)
 
     def animate(self):
         fig = plt.figure(figsize=(10, 10))
         ax = fig.add_subplot(111, projection='3d')
         ax.set_box_aspect((1, 1, 1))
 
-        sun_plot, = ax.plot([], [], [], 'o', color='tab:orange', label='Sun', markersize=10)
-        earth_plot, = ax.plot([], [], [], 'o', color='tab:blue', label='Earth', markersize=5)
-        jupiter_plot, = ax.plot([], [], [], 'o', color='tab:red', label='Jupiter', markersize=8)
-        mars_plot, = ax.plot([], [], [], 'o', color='tab:brown', label='Mars', markersize=5)
-        saturn_plot, = ax.plot([], [], [], 'o', color='tab:olive', label='Saturn', markersize=7)
-        uranus_plot, = ax.plot([], [], [], 'o', color='tab:cyan', label='Uranus', markersize=6)
-        neptune_plot, = ax.plot([], [], [], 'o', color='tab:purple', label='Neptune', markersize=6)
-        
-        earth_trail, = ax.plot([], [], [], linestyle='-', color='tab:blue')
-        jupiter_trail, = ax.plot([], [], [], linestyle='-', color='tab:red')
-        mars_trail, = ax.plot([], [], [], linestyle='-', color='tab:brown')
-        mars_trail, = ax.plot([], [], [], linestyle='-', color='tab:brown')
-        saturn_trail, = ax.plot([], [], [], linestyle='-', color='tab:olive')
-        uranus_trail, = ax.plot([], [], [], linestyle='-', color='tab:cyan')
-        neptune_trail, = ax.plot([], [], [], linestyle='-', color='tab:purple')
+        #creating axes for planets and asteroids
+        plots = {}
+        trails = {}
+        for name in self.planets.keys():
+            plots[name], = ax.plot([], [], [], 'o', label=name, markersize=5)
+            trails[name], = ax.plot([], [], [], linestyle='-')
+        for name in self.asteroids.keys():
+            plots[name], = ax.plot([], [], [], 'o', markersize=2, c="dimgray")
+            trails[name], = ax.plot([], [], [], linestyle=':', c="darkgray")
 
         def init():
+            """parameters for 3d plot"""
             ax.set_xlim([-5e12, 5e12])
             ax.set_ylim([-5e12, 5e12])
-            ax.set_zlim([-0.8e12, 0.8e12])
+            ax.set_zlim([-5e12, 5e12])
             ax.set_xlabel('x (m)')
             ax.set_ylabel('y (m)')
             ax.set_zlabel('z (m)')
             ax.set_title('Live 3D Solar System Simulation')
             ax.legend()
-            return sun_plot, earth_plot, jupiter_plot, mars_plot, saturn_plot, uranus_plot, neptune_plot, earth_trail, jupiter_trail, mars_trail, saturn_trail, uranus_trail, neptune_trail
+            return [*plots.values(), *trails.values()]
 
         def update(frame):
-            # update positions
-            sun_plot.set_data([0], [0])
-            sun_plot.set_3d_properties([0])
+            #update planets and their trails
+            for name, body in self.planets.items():
+                plots[name].set_data([body.position[frame, 0]], [body.position[frame, 1]])
+                plots[name].set_3d_properties([body.position[frame, 2]])
+                trails[name].set_data(body.position[:frame, 0], body.position[:frame, 1])
+                trails[name].set_3d_properties(body.position[:frame, 2])
+            
+            #update asteroids and their (shortened) trails
+            for name, body in self.asteroids.items():
+                plots[name].set_data([body.position[frame, 0]], [body.position[frame, 1]])
+                plots[name].set_3d_properties([body.position[frame, 2]])
 
-            earth_plot.set_data([self.Earth.position[frame, 0]], [self.Earth.position[frame, 1]])
-            earth_plot.set_3d_properties([self.Earth.position[frame, 2]])
+                start_idx = max(0, frame - 3000) #3000 is maximum trail length
+                trails[name].set_data(body.position[start_idx:frame, 0], body.position[start_idx:frame, 1])
+                trails[name].set_3d_properties(body.position[start_idx:frame, 2])
+            return [*plots.values(), *trails.values()]
 
-            jupiter_plot.set_data([self.Jupiter.position[frame, 0]], [self.Jupiter.position[frame, 1]])
-            jupiter_plot.set_3d_properties([self.Jupiter.position[frame, 2]])
-
-            mars_plot.set_data([self.Mars.position[frame, 0]], [self.Mars.position[frame, 1]])
-            mars_plot.set_3d_properties([self.Mars.position[frame, 2]])
-
-            saturn_plot.set_data([self.Saturn.position[frame, 0]], [self.Saturn.position[frame, 1]])
-            saturn_plot.set_3d_properties([self.Saturn.position[frame, 2]])
-
-            uranus_plot.set_data([self.Uranus.position[frame, 0]], [self.Uranus.position[frame, 1]])
-            uranus_plot.set_3d_properties([self.Uranus.position[frame, 2]])
-
-            neptune_plot.set_data([self.Neptune.position[frame, 0]], [self.Neptune.position[frame, 1]])
-            neptune_plot.set_3d_properties([self.Neptune.position[frame, 2]])
-
-            # update trails
-            earth_trail.set_data(self.Earth.position[:frame, 0], self.Earth.position[:frame, 1])
-            earth_trail.set_3d_properties(self.Earth.position[:frame, 2])
-
-            jupiter_trail.set_data(self.Jupiter.position[:frame, 0], self.Jupiter.position[:frame, 1])
-            jupiter_trail.set_3d_properties(self.Jupiter.position[:frame, 2])
-
-            mars_trail.set_data(self.Mars.position[:frame, 0], self.Mars.position[:frame, 1])
-            mars_trail.set_3d_properties(self.Mars.position[:frame, 2])
-
-            saturn_trail.set_data(self.Saturn.position[:frame, 0], self.Saturn.position[:frame, 1])
-            saturn_trail.set_3d_properties(self.Saturn.position[:frame, 2])
-
-            uranus_trail.set_data(self.Uranus.position[:frame, 0], self.Uranus.position[:frame, 1])
-            uranus_trail.set_3d_properties(self.Uranus.position[:frame, 2])
-
-            neptune_trail.set_data(self.Neptune.position[:frame, 0], self.Neptune.position[:frame, 1])
-            neptune_trail.set_3d_properties(self.Neptune.position[:frame, 2])
-
-            return sun_plot, earth_plot, jupiter_plot, mars_plot, saturn_plot, earth_trail, jupiter_trail, mars_trail, saturn_trail, uranus_trail, neptune_trail
-
-        ani = FuncAnimation(fig, update, frames=range(0, self.N,200), init_func=init, blit=False, interval=100)
+        ani = FuncAnimation(fig, update, frames=range(0, self.N, 200), init_func=init, blit=False, interval=100)
         ani.save("Figures/solar_system_3D.gif", writer=PillowWriter(fps=30))
+
+
         
 def main():
     sim = SolarSystem(N=int(365 * 100), dt=60 * 60 * 24)  # simulate for 100 years
