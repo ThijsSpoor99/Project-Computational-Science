@@ -40,6 +40,17 @@ class SolarSystem:
                 mass=pos.loc['M'],
                 N=N
             )
+
+            self.planetColors = {"Sun": "yellow",
+                                 "Mercury": "gray",
+                                 "Venus": "khaki",
+                                 "Earth": "blue",
+                                 "Mars": "red",
+                                 "Jupiter": "darkorange",
+                                 "Saturn": "gold",
+                                 "Uranus": "lightskyblue",
+                                 "Neptune": "royalblue"}
+
         self.asteroids = {}
         startPositionsAsteroids = pd.read_csv("Data/CentaursCartesian.csv", header=0, index_col=0).head(50)
         for asteroid, pos in startPositionsAsteroids.iterrows():
@@ -49,6 +60,7 @@ class SolarSystem:
                 mass=1,  # Massless assumption
                 N=N
             )
+
         self.planets["Sun"] = Celestial(
             startPosition=[0, 0, 0],
             startVelocity=[0, 0, 0],
@@ -57,16 +69,15 @@ class SolarSystem:
         )
         self.N = N
         self.dt = dt
-
     
     def simulate(self):
         for i in range(1, self.N):
-            #update planets
+            # update planets
             for name, body in self.planets.items():
                 other_planets = [obj for planet, obj in self.planets.items() if planet != name]
                 body.update(other_planets, i, self.dt)
             
-            #update asteroids
+            # update asteroids
             for name, body in self.asteroids.items():
                 body.update(self.planets.values(), i, self.dt)
 
@@ -75,12 +86,13 @@ class SolarSystem:
         ax = fig.add_subplot(111, projection='3d')
         ax.set_box_aspect((1, 1, 1))
 
-        #creating axes for planets and asteroids
+        # creating axes for planets and asteroids
         plots = {}
         trails = {}
         for name in self.planets.keys():
-            plots[name], = ax.plot([], [], [], 'o', label=name, markersize=5)
-            trails[name], = ax.plot([], [], [], linestyle='-')
+            plots[name], = ax.plot([], [], [], 'o', label=name, markersize=5, c=self.planetColors[name])
+            trails[name], = ax.plot([], [], [], linestyle='-', c=self.planetColors[name])
+
         for name in self.asteroids.keys():
             plots[name], = ax.plot([], [], [], 'o', markersize=2, c="dimgray")
             trails[name], = ax.plot([], [], [], linestyle=':', c="darkgray")
@@ -118,8 +130,6 @@ class SolarSystem:
         ani = FuncAnimation(fig, update, frames=range(0, self.N, 200), init_func=init, blit=False, interval=100)
         ani.save("Figures/solar_system_3D.gif", writer=PillowWriter(fps=30))
 
-
-        
 def main():
     sim = SolarSystem(N=int(365 * 100), dt=60 * 60 * 24)  # simulate for 100 years
     sim.simulate()

@@ -20,8 +20,8 @@ namespace Constants {
     constexpr double G = 6.67430e-11;
 }
 
-// vector math (for loop is faster for small arrays)
-std::array<double, 3> subtract3D(const std::array<double, 3>& v1, const std::array<double, 3>& v2) {
+// returns v = v1 - v2
+std::array<double, 3> subtract3D(const std::array<double, 3> &v1, const std::array<double, 3> &v2) {
     std::array<double, 3> result;
     result[0] = v1[0] - v2[0];
     result[1] = v1[1] - v2[1];
@@ -29,7 +29,17 @@ std::array<double, 3> subtract3D(const std::array<double, 3>& v1, const std::arr
     return result;
 }
 
-double calc_rCubed(const std::array<double, 3>& v) {
+// returns v = v1 + v2
+std::array<double, 3> add3D(const std::array<double, 3> &v1, const std::array<double, 3> &v2) {
+    std::array<double, 3> result;
+    result[0] = v1[0] + v2[0];
+    result[1] = v1[1] + v2[1];
+    result[2] = v1[2] + v2[2];
+    return result;
+}
+
+// returns |v|^3 
+double calc_rCubed(const std::array<double, 3> &v) {
     double r2 = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
     double rCubed = r2 * sqrt(r2);
     return rCubed;
@@ -124,7 +134,7 @@ public:
     // set unchanging constants
     const int nPlanets = 8;
     const int dt = 86400;
-    const long nSteps = 365*100;
+    const long nSteps = 365*1000;
 
     // vector allows dynamic resizing and memory allocation (but slower)
     Celestial Sun;
@@ -159,7 +169,7 @@ public:
         }
     }
 
-    void updatePlanets(int t) {
+    void updatePlanets(int& t) {
         // calc aVec for each planet
         for (int i = 0; i < nPlanets; i++) {
 
