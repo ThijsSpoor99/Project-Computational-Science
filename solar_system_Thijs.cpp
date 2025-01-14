@@ -7,20 +7,18 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include "Include\json.hpp"
-#include "Include/json.hpp"
-using json = nlohmann::json;
 #include <filesystem>
 
 // math stuff
 #include <cmath>
+#include <chrono>
 
 // universal constants
 namespace Constants {
     constexpr double G = 6.67430e-11;
 }
 
-// returns v = v1 - v2
+// returns v1 - v2
 std::array<double, 3> subtract3D(const std::array<double, 3> &v1, const std::array<double, 3> &v2) {
     std::array<double, 3> result;
     result[0] = v1[0] - v2[0];
@@ -29,7 +27,7 @@ std::array<double, 3> subtract3D(const std::array<double, 3> &v1, const std::arr
     return result;
 }
 
-// returns v = v1 + v2
+// returns v1 + v2
 std::array<double, 3> add3D(const std::array<double, 3> &v1, const std::array<double, 3> &v2) {
     std::array<double, 3> result;
     result[0] = v1[0] + v2[0];
@@ -38,11 +36,45 @@ std::array<double, 3> add3D(const std::array<double, 3> &v1, const std::array<do
     return result;
 }
 
+// returns |v|
+double calcNorm(const std::array<double, 3> &v) {
+    double norm = std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    return norm;
+}
+
+// returns |v|^2
+double calcSquare(const std::array<double, 3> &v) {
+    double square = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
+    return square;
+}
+
 // returns |v|^3 
-double calc_rCubed(const std::array<double, 3> &v) {
-    double r2 = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
-    double rCubed = r2 * sqrt(r2);
-    return rCubed;
+double calcCube(const std::array<double, 3> &v) {
+    double square = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
+    double cube = square * sqrt(square);
+    return cube;
+}
+
+// save a vector as .csv
+void saveVector(const std::vector<double> &data, const std::string& filename) {
+    const std::string directory = "Data\\";
+    const std::string filepath = directory + filename;
+    std::ofstream file(filepath);
+
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file " << filepath << " for writing." << std::endl;
+        return;
+    }
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        file << data[i];
+        if (i != data.size() - 1) {
+            file << ","; 
+        }
+    }
+
+    file.close();
+    std::cout << "Vector written to " << filepath << " successfully." << std::endl;
 }
 
 // how is this readable, look at the length man
@@ -97,8 +129,8 @@ public:
     // constructor
     // & means reference
     Celestial(std::string inputName,
-              const std::array<double, 3>& startPos, 
-              const std::array<double, 3>& startVel, 
+              const std::array<double, 3> &startPos, 
+              const std::array<double, 3> &startVel, 
               double inputMass,
               size_t nSteps
               )
@@ -118,14 +150,6 @@ public:
         position[0] = startPos;
         velocity[0] = startVel;
         }
-
-    // convert to json style
-    json toJson() const {
-        return json{{"name", name}, 
-                    {"position", position},
-                    {"velocity", velocity},
-                    {"mass", mass}}; 
-    }
 };
 
 class SolarSystem {
@@ -134,7 +158,7 @@ public:
     // set unchanging constants
     const int nPlanets = 8;
     const int dt = 86400;
-    const long nSteps = 365*1000;
+    const long nSteps = 10000000;
 
     // vector allows dynamic resizing and memory allocation (but slower)
     Celestial Sun;
@@ -147,13 +171,18 @@ public:
     // allocate memory for calculations
     std::array<double, 3> rVec;
     std::array<double, 3> aVec;
-    double rCubed;
-    double GMrCubed;
+    double vSquared = 0.0;
+    double rNorm = 0.0;
+    double rCubed = 0.0;
+    double GMrCubed = 0.0;
+    double GMrSquared = 0.0;
+    double tempEnergy = 0.0;
+    std::vector<double> systemEnergy;
 
     // constructor
     SolarSystem() 
         :
-        Sun(Celestial("Sun", {0, 0, 0}, {0, 0, 0}, 1.989e30, nSteps)),
+        Sun(Celestial("Sun", {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, 1.989e30, nSteps)),
         planetData(getPlanetData()) 
 
     {
@@ -169,7 +198,7 @@ public:
         }
     }
 
-    void updatePlanets(int& t) {
+    void updatePlanets(int &t) {
         // calc aVec for each planet
         for (int i = 0; i < nPlanets; i++) {
 
@@ -178,7 +207,7 @@ public:
             for (int j = 0; j < nPlanets; j++) {
                 if (i != j) {
                     rVec = subtract3D(planets[i].position[t-1], planets[j].position[t-1]);
-                    rCubed = calc_rCubed(rVec);
+                    rCubed = calcCube(rVec);
                     GMrCubed = planets[j].GM / rCubed;
 
                     aVec[0] -= GMrCubed * rVec[0];
@@ -190,7 +219,7 @@ public:
             // calc gravitational pull from SUN
             // Stationary sun, thus pos=rVec
             rVec = planets[i].position[t-1];
-            rCubed = calc_rCubed(rVec);
+            rCubed = calcCube(rVec);
             GMrCubed = Sun.GM / rCubed;
             aVec[0] -= GMrCubed * rVec[0];
             aVec[1] -= GMrCubed * rVec[1];
@@ -206,41 +235,58 @@ public:
             }   
     }
 
+    void calcSystemEnergy(int &t) {
+        tempEnergy = 0.0;
+        for (int i = 0; i < nPlanets; i++) {
+
+            // kinetic energy
+            vSquared = calcSquare(planets[i].velocity[t]);
+            tempEnergy += 0.5 * planets[i].mass * vSquared;
+
+            // potential from planet-planet
+            // gravity is pair-wise (avoid double counting)
+            for (int j = i + 1; j < nPlanets; j++) {
+                rVec = subtract3D(planets[i].position[t], planets[j].position[t]);
+                rNorm = calcNorm(rVec);
+                tempEnergy -= planets[i].GM * planets[j].mass / rNorm;
+            }
+            
+            // potential from planet-sun
+            rNorm = calcNorm(planets[i].position[t]);
+            tempEnergy -= Sun.GM * planets[i].mass / rNorm;
+
+        }
+        std::cout << tempEnergy << std::endl;
+        systemEnergy.push_back(tempEnergy);
+    }
+
     void simulate() {
+        int t = 0;
+        calcSystemEnergy(t);
         std::cout << "Simulating..." << std::endl;
         for (int t=1; t < nSteps; t++) {
             updatePlanets(t);
-            if (t % 1000 == 0) {
-                std::cout << t << std::endl;
+
+            if (t % 100000 == 0) {
+                calcSystemEnergy(t);
             }
         }
-    }
-
-    void savePlanetSimulation() {
-        std::vector<json> planetsJson; 
-
-        for (int i = 0; i < nPlanets; i++) {
-            std::cout << "Processing planet " << i + 1 << " of " << nPlanets << std::endl;
-            planetsJson.push_back(planets[i].toJson());
-        }
-
-        std::ofstream file("Data\\planets.json");
-        if (file.is_open()) {
-            json outputJson = planetsJson;
-            file << outputJson.dump(4);
-            file.close();
-            std::cout << "Planets saved to planets.json" << std::endl;
-        } else {
-            std::cerr << "Error opening file!" << std::endl;
-    }
     }
 };
 
 int main() {
     SolarSystem sim;
 
+    // time simulation
+    auto startTime = std::chrono::high_resolution_clock::now();
     sim.simulate();
-    sim.savePlanetSimulation();
+    auto stopTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
+    std::cout << duration.count() << " ms" << std::endl;
+
+    saveVector(sim.systemEnergy, "systemEnergy.csv");
+
+    // sim.savePlanetSimulation();
 
     return 0;
 }
