@@ -77,14 +77,14 @@ void saveVector(const std::vector<double> &data, const std::string& filename) {
     std::cout << "Vector written to " << filepath << " successfully." << std::endl;
 }
 
-// how is this readable, look at the length man
-std::vector<std::vector<std::string>> getPlanetData() {
+// imports csv data as 2D vector
+std::vector<std::vector<std::string>> readCSV(const std::string filepath) {
     // open file
-    std::ifstream file("Data/planetData.csv");
+    std::ifstream file(filepath);
     std::string line;
     
     // initialize 2D vector to store data
-    std::vector<std::vector<std::string>> planetData;
+    std::vector<std::vector<std::string>> data;
 
     // skip first row
     std::getline(file, line);
@@ -107,49 +107,71 @@ std::vector<std::vector<std::string>> getPlanetData() {
         }
         
         // add row to 2D vector
-        planetData.push_back(row);
+        data.push_back(row);
     }
 
     // always close the file :)
     file.close();
 
-    return planetData;
+    return data;
 }
 
 class Celestial {
 public:
 
-    // create class attributes
+    // create class variables
     std::string name;
     std::vector<std::array<double, 3>> position;
-    std::vector<std::array<double, 3>> velocity;
+    std::array<double, 3> velocity;
     double mass;
     double GM;
 
     // constructor
     // & means reference
-    Celestial(std::string inputName,
-              const std::array<double, 3> &startPos, 
-              const std::array<double, 3> &startVel, 
+    Celestial(const std::string inputName,
+              const std::array<double, 3> &startPos,
+              const std::array<double, 3> &startVel,  
               double inputMass,
-              size_t nSteps
+              const size_t nSteps
               )
 
               // constructor list
               : 
               name(inputName), 
               mass(inputMass), 
-              GM(Constants::G * inputMass)
-                
+              GM(Constants::G * inputMass),
+              velocity(startVel)
+
         {
         // resize vectors
         position.resize(nSteps);
-        velocity.resize(nSteps);
 
         // set starting conditions
         position[0] = startPos;
-        velocity[0] = startVel;
         }
+};
+
+class Centaur {
+public:
+
+    // create class variables
+    std::string name;
+    std::vector<std::array<double, 3>> position;
+    std::array<double, 3> velocity;
+
+    // constructor
+    Centaur(const std::string name,
+             const std::array<double, 3> &startPos,
+             const std::array<double, 3> &startVel,
+             const size_t nSteps)
+             :
+             name(name),
+             velocity(startVel)
+        {
+        position.resize(nSteps);
+        position[0] = startPos;
+        }
+             
 };
 
 class SolarSystem {
@@ -157,16 +179,18 @@ public:
 
     // set unchanging constants
     const int nPlanets = 8;
-    const int dt = 86400;
-    const long nSteps = 10000000;
+    const int nCentaurs = 50;
+    const int dt = 86400; // 1 day
+    const long nSteps = 1e6;
 
     // vector allows dynamic resizing and memory allocation (but slower)
     Celestial Sun;
     std::vector<Celestial> planets;
-    std::vector<Celestial> centaurs;
+    std::vector<Centaur> centaurs;
 
     // input data
     std::vector<std::vector<std::string>> planetData;
+    std::vector<std::vector<std::string>> centaurData;
 
     // allocate memory for calculations
     std::array<double, 3> rVec;
@@ -183,7 +207,8 @@ public:
     SolarSystem() 
         :
         Sun(Celestial("Sun", {0.0, 0.0, 0.0}, {0.0, 0.0, 0.0}, 1.989e30, nSteps)),
-        planetData(getPlanetData()) 
+        planetData(readCSV("Data\\planetData.csv")),
+        centaurData(readCSV("Data\\CentaursCartesian.csv")) 
 
     {
         for (int i = 0; i < nPlanets; i++) {
@@ -194,6 +219,16 @@ public:
                 std::stod(planetData[i][7]),
                 nSteps
                 )   
+            );
+        }
+
+        for (int i = 0; i < nCentaurs; i++) {
+            centaurs.push_back(Centaur(
+                centaurData[i][0],
+                {std::stod(centaurData[i][1]), std::stod(centaurData[i][2]), std::stod(centaurData[i][3])},
+                {std::stod(centaurData[i][4]), std::stod(centaurData[i][5]), std::stod(centaurData[i][6])},
+                nSteps
+                )
             );
         }
     }
@@ -225,14 +260,49 @@ public:
             aVec[1] -= GMrCubed * rVec[1];
             aVec[2] -= GMrCubed * rVec[2];
 
-            planets[i].velocity[t][0] = planets[i].velocity[t-1][0] + dt * aVec[0];
-            planets[i].velocity[t][1] = planets[i].velocity[t-1][1] + dt * aVec[1];
-            planets[i].velocity[t][2] = planets[i].velocity[t-1][2] + dt * aVec[2];
+            planets[i].velocity[0] = planets[i].velocity[0] + dt * aVec[0];
+            planets[i].velocity[1] = planets[i].velocity[1] + dt * aVec[1];
+            planets[i].velocity[2] = planets[i].velocity[2] + dt * aVec[2];
 
-            planets[i].position[t][0] = planets[i].position[t-1][0] + dt * planets[i].velocity[t][0];
-            planets[i].position[t][1] = planets[i].position[t-1][1] + dt * planets[i].velocity[t][1];
-            planets[i].position[t][2] = planets[i].position[t-1][2] + dt * planets[i].velocity[t][2];
+            planets[i].position[t][0] = planets[i].position[t-1][0] + dt * planets[i].velocity[0];
+            planets[i].position[t][1] = planets[i].position[t-1][1] + dt * planets[i].velocity[1];
+            planets[i].position[t][2] = planets[i].position[t-1][2] + dt * planets[i].velocity[2];
             }   
+    }
+
+    void updateCentaurs(int &t) {
+        // calc aVec for each centaur
+        for (int i = 0; i < nCentaurs; i++) {
+            aVec = {0.0, 0.0, 0.0};
+
+            // calc gravitional pull from planets
+            for (int j = 0; j <nPlanets; j++) {
+                rVec = subtract3D(centaurs[i].position[t-1], planets[j].position[t-1]);
+                rCubed = calcCube(rVec);
+                GMrCubed = planets[j].GM / rCubed;
+
+                aVec[0] -= GMrCubed * rVec[0];
+                aVec[1] -= GMrCubed * rVec[1];
+                aVec[2] -= GMrCubed * rVec[2];
+            }
+
+            // calc gravitational pull from SUN
+            // Stationary sun, thus pos=rVec
+            rVec = centaurs[i].position[t-1];
+            rCubed = calcCube(rVec);
+            GMrCubed = Sun.GM / rCubed;
+            aVec[0] -= GMrCubed * rVec[0];
+            aVec[1] -= GMrCubed * rVec[1];
+            aVec[2] -= GMrCubed * rVec[2];
+
+            centaurs[i].velocity[0] = centaurs[i].velocity[0] + dt * aVec[0];
+            centaurs[i].velocity[1] = centaurs[i].velocity[1] + dt * aVec[1];
+            centaurs[i].velocity[2] = centaurs[i].velocity[2] + dt * aVec[2];
+
+            centaurs[i].position[t][0] = centaurs[i].position[t-1][0] + dt * centaurs[i].velocity[0];
+            centaurs[i].position[t][1] = centaurs[i].position[t-1][1] + dt * centaurs[i].velocity[1];
+            centaurs[i].position[t][2] = centaurs[i].position[t-1][2] + dt * centaurs[i].velocity[2];
+        }
     }
 
     void calcSystemEnergy(int &t) {
@@ -240,7 +310,7 @@ public:
         for (int i = 0; i < nPlanets; i++) {
 
             // kinetic energy
-            vSquared = calcSquare(planets[i].velocity[t]);
+            vSquared = calcSquare(planets[i].velocity);
             tempEnergy += 0.5 * planets[i].mass * vSquared;
 
             // potential from planet-planet
@@ -254,8 +324,28 @@ public:
             // potential from planet-sun
             rNorm = calcNorm(planets[i].position[t]);
             tempEnergy -= Sun.GM * planets[i].mass / rNorm;
-
         }
+
+        // calc centaur energy
+        // we assume neglilible mass (m=1 for easy computing)
+        for (int i = 0; i < nCentaurs; i++) {
+
+            // kinetic energy
+            vSquared = calcSquare(centaurs[i].velocity);
+            tempEnergy += 0.5 * vSquared;
+
+            // potential from centaur-planet
+            for (int j = 1; j < nPlanets; j++) {
+                rVec = subtract3D(centaurs[i].position[t], planets[j].position[t]);
+                rNorm = calcNorm(rVec);
+                tempEnergy -= planets[j].GM / rNorm;
+            }
+            
+            // potential from centaur-sun
+            rNorm = calcNorm(centaurs[i].position[t]);
+            tempEnergy -= Sun.GM / rNorm;
+        }
+
         std::cout << tempEnergy << std::endl;
         systemEnergy.push_back(tempEnergy);
     }
@@ -266,6 +356,7 @@ public:
         std::cout << "Simulating..." << std::endl;
         for (int t=1; t < nSteps; t++) {
             updatePlanets(t);
+            updateCentaurs(t);
 
             if (t % 100000 == 0) {
                 calcSystemEnergy(t);
@@ -285,8 +376,6 @@ int main() {
     std::cout << duration.count() << " ms" << std::endl;
 
     saveVector(sim.systemEnergy, "systemEnergy.csv");
-
-    // sim.savePlanetSimulation();
 
     return 0;
 }
