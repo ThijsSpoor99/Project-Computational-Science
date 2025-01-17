@@ -61,7 +61,8 @@
     "variant": "cpp",
     "charconv": "cpp",
     "chrono": "cpp",
-    "format": "cpp"
+    "format": "cpp",
+    "text_encoding": "cpp"
   },
   "r.lsp.promptToInstall": false
 }
