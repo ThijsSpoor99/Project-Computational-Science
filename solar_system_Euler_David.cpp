@@ -216,8 +216,8 @@ public:
     double GMrCubed = 0.0;
     double GMrSquared = 0.0;
     double tempEnergy = 0.0;
-    std::vector<double> systemEnergy;
     double earthHits = 0;
+    std::vector<double> systemEnergy;
 
     // constructor
     SolarSystem() 
