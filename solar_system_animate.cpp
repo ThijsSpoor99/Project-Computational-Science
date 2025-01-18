@@ -63,7 +63,7 @@ public:
     const int nPlanets = 8;
     const int nCentaurs = 10;
     const int dt = 1;        // 1 day
-    const long nSteps = 1e6; // 1e6
+    const long nSteps = 1e7; // 1e6
 
     Celestial Sun;
     std::vector<Celestial> planets;
@@ -393,6 +393,8 @@ int main()
     sim.simulate();
     auto stopTime = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
+
+    sim.savePlanetPositions();
 
     std::cout << "Total simulation time: " << duration.count() << " ms" << std::endl;
 
