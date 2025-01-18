@@ -8,103 +8,7 @@
 #include <cmath>
 #include <chrono>
 
-// universal constants
-namespace Constants
-{
-    constexpr double G = 6.67430e-11;
-}
-
-// returns v1 - v2
-std::array<double, 3> subtract3D(const std::array<double, 3> &v1, const std::array<double, 3> &v2)
-{
-    std::array<double, 3> result;
-    result[0] = v1[0] - v2[0];
-    result[1] = v1[1] - v2[1];
-    result[2] = v1[2] - v2[2];
-    return result;
-}
-
-// returns v1 + v2
-std::array<double, 3> add3D(const std::array<double, 3> &v1, const std::array<double, 3> &v2)
-{
-    std::array<double, 3> result;
-    result[0] = v1[0] + v2[0];
-    result[1] = v1[1] + v2[1];
-    result[2] = v1[2] + v2[2];
-    return result;
-}
-
-// returns |v|
-double calcNorm(const std::array<double, 3> &v)
-{
-    return std::sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-}
-
-// returns |v|^2
-double calcSquare(const std::array<double, 3> &v)
-{
-    return v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
-}
-
-// returns |v|^3
-double calcCube(const std::array<double, 3> &v)
-{
-    double square = calcSquare(v);
-    return square * std::sqrt(square);
-}
-
-// save a vector as .csv
-void saveVector(const std::vector<double> &data, const std::string &filename)
-{
-    const std::string directory = "Data\\";
-    const std::string filepath = directory + filename;
-    std::ofstream file(filepath);
-
-    if (!file.is_open())
-    {
-        std::cerr << "Error: Could not open file " << filepath << " for writing." << std::endl;
-        return;
-    }
-
-    for (size_t i = 0; i < data.size(); ++i)
-    {
-        file << data[i];
-        if (i != data.size() - 1)
-        {
-            file << ",";
-        }
-    }
-
-    file.close();
-    std::cout << "Vector written to " << filepath << " successfully." << std::endl;
-}
-
-// imports csv data as 2D vector
-std::vector<std::vector<std::string>> readCSV(const std::string filepath)
-{
-    std::ifstream file(filepath);
-    std::string line;
-    std::vector<std::vector<std::string>> data;
-
-    // skip first row (header)
-    std::getline(file, line);
-
-    // read row by row
-    while (std::getline(file, line))
-    {
-        std::stringstream ss(line);
-        std::string value;
-        std::vector<std::string> row;
-        while (std::getline(ss, value, ','))
-        {
-            row.push_back(value);
-        }
-        data.push_back(row);
-    }
-
-    file.close();
-    return data;
-}
+#include "Include\util.hpp"
 
 class Celestial
 {
@@ -129,6 +33,7 @@ public:
         position.resize(nSteps);
         position[0] = startPos;
         acceleration = {0.0, 0.0, 0.0};
+        GM = GMtoAstro(GM);
     }
 };
 
@@ -156,9 +61,9 @@ class SolarSystem
 {
 public:
     const int nPlanets = 8;
-    const int nCentaurs = 50;
-    const int dt = 86400;        // 1 day
-    const long nSteps = 1000000; // 1e6
+    const int nCentaurs = 10;
+    const int dt = 1;        // 1 day
+    const long nSteps = 1e6; // 1e6
 
     Celestial Sun;
     std::vector<Celestial> planets;
@@ -471,6 +376,12 @@ public:
             }
         }
     }
+
+    void savePlanetPositions() {
+        for (int i=0; i<nPlanets; i++) {
+            saveToCSV(planets[i].position, "Data\\planetPositions\\" + planets[i].name + ".csv");
+        }
+    }
 };
 
 int main()
@@ -484,9 +395,6 @@ int main()
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
 
     std::cout << "Total simulation time: " << duration.count() << " ms" << std::endl;
-
-    // save total energies to CSV
-    saveVector(sim.systemEnergy, "systemEnergyVerlet.csv");
 
     return 0;
 }
