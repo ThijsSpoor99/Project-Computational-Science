@@ -31,7 +31,7 @@ public:
           mass(inputMass),
           GM(Constants::G * inputMass),
           velocity(startVel),
-          radiusCubed(10)     
+          radiusCubed(inputRadius)     
     {
         position = startPos;
         acceleration = {0.0, 0.0, 0.0};
@@ -84,6 +84,8 @@ public:
     double tempEnergy = 0.0;
     std::vector<double> celestialEnergy;
     std::vector<double> centaurEnergy;
+
+    int nImpacts = 0;
 
     SolarSystem()
         :celestialData(readCSV("Data\\celestialDataReduced.csv")), centaurData(readCSV("Data\\CentaursCartesian.csv"))
@@ -241,8 +243,9 @@ public:
 
                     if (rCubed < celestials[j].radiusCubed) {
                         centaurs[i].exist = false;
-                        std::cout << "impact" << std::endl;
-                        break;
+                        nImpacts += 1;
+                        std::cout << nImpacts << " impact" << std::endl;
+                        // break; // do not break during loop for energy conservation
                     } else {
                         GMrCubed = celestials[j].GM / rCubed;
                         centaurs[i].acceleration[0] -= GMrCubed * rVec[0];
@@ -256,7 +259,7 @@ public:
                 centaurs[i].velocity[2] += 0.5 * dt * centaurs[i].acceleration[2];
 
             } else {
-                std::cout << "bad" << std::endl;
+                continue;
             }
         }
     }
