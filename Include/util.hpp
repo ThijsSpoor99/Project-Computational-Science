@@ -2,7 +2,9 @@
 #define UTIL_HPP
 
 #include <array>
+#include <vector>
 #include <cmath>
+#include <string>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -119,6 +121,56 @@ inline void saveToCSV(const std::vector<std::array<double, 3>>& data, const std:
 
     file.close();
     std::cout << "Data successfully written to " << filepath << std::endl;
+}
+
+/* Function to write a single `.vtk` file, input is a vector which contains tripples (xyz) of all the
+ * solar system objects
+ *
+ *  data: Vector of triples which are the xyz coordinates of all the celestial at a given time step
+ *  filepath: string which states the name of the file to which it should be written
+ * 
+ * Side effects: creates a file which contains the xyz coordinates of the celestial objects at a givne
+ * time step.
+ */
+inline void saveToVTK(const std::vector<std::array<double, 3>>& data, const std::string& filepath) {
+    std::ofstream vtkFile(filepath, std::ios::binary);
+
+    if (!vtkFile.is_open()) {
+        std::cerr << "Error: Could not open file " << filepath << std::endl;
+        return;
+    }
+
+    //legacy vtk header
+    vtkFile << "# vtk DataFile Version 3.0\n";
+    vtkFile << "Solar System Simulation\n";
+    vtkFile << "ASCII\n";
+    vtkFile << "DATASET POLYDATA\n";
+
+    // Write points
+    vtkFile << "POINTS " << data.size() << " float\n";
+    for (int i = 0; i < data.size(); ++i) {
+        vtkFile << data[i][0] << " " << data[i][1]  << " " << data[i][2]  << "\n";
+    }
+
+    vtkFile.close();
+}
+
+//util function to (re)create a folder and clearing the previous contents
+inline void clearAndCreateDirectory(const std::string& path) {
+    try {
+        // If directory exists, remove it and its contents
+        if (std::filesystem::exists(path)) {
+            std::filesystem::remove_all(path);
+            std::cout << "Existing directory deleted: " << path << std::endl;
+        }
+
+        // Create the directory again
+        std::filesystem::create_directories(path);
+        std::cout << "Directory recreated: " << path << std::endl;
+
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Error with filesystem operation: " << e.what() << std::endl;
+    }
 }
 
 #endif // UTILS_HPP

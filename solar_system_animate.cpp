@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <cmath>
 #include <chrono>
+#include <iomanip>
 
 #include "Include\util.hpp"
 
@@ -62,7 +63,7 @@ class SolarSystem
 {
 public:
     int nCelestials;
-    const int nCentaurs = 10;
+    const int nCentaurs = 30;
     const int dt = 1;        // 1 day
     const long nSteps = 365e3; // 1e6
 
@@ -342,6 +343,38 @@ public:
             saveToCSV(planets[i].position, "Data\\planetPositions\\" + planets[i].name + ".csv");
         }
     }
+
+    void saveObjectPositionsVTK(int nSteps) {
+        //determine number of digits in nSteps for file name padding
+        int originalSteps = nSteps;
+        int digits = 0; while (nSteps != 0) { nSteps /= 10; digits++; }
+        clearAndCreateDirectory("Data\\vtkData");
+        
+        for (int i = 0; i < originalSteps; ++i) {
+            std::vector<std::array<double, 3>> stepVec;
+            
+            //add xyz of planets at timestep i to stepVec
+            for (int ip = 0; ip < nCelestials; ++ip) {
+                stepVec.push_back(planets[ip].position[i]);
+            }
+
+            //add xyz of asteroids at timestep i to stepVec
+            for (int ic = 0; ic < nCentaurs; ++ic) {
+                stepVec.push_back(centaurs[ic].position[i]);
+            }
+
+            std::ostringstream filename;
+            filename << "Data\\vtkData\\out_"
+                    << std::setfill('0')  // fill with zeros
+                    << std::setw(digits)  // width based on time steps
+                    << i
+                    << ".vtk";
+
+            // Save the data to a VTK file for the current timestep
+            saveToVTK(stepVec, filename.str());
+             
+        }
+    }
 };
 
 int main()
@@ -355,6 +388,10 @@ int main()
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
 
     sim.savePlanetPositions();
+    
+    //If you want to save the positions of the first 1000 time steps
+    //beware though 1000 files will be created
+    //sim.saveObjectPositionsVTK(1000);
 
     std::cout << "Total simulation time: " << duration.count() << " ms" << std::endl;
 
