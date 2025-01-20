@@ -19,15 +19,19 @@ public:
     std::array<double, 3> acceleration; // for Velocity Verlet
     double mass;
     double GM;
+    double radiusCubed;
 
-    Celestial(const std::string inputName,
+    Celestial() = default;
+    Celestial(const std::string &inputName,
               const std::array<double, 3> &startPos,
               const std::array<double, 3> &startVel,
-              double inputMass)
+              double inputMass,
+              double inputRadius)
         : name(inputName),
           mass(inputMass),
           GM(Constants::G * inputMass),
-          velocity(startVel)
+          velocity(startVel),
+          radiusCubed(10)     
     {
         position = startPos;
         acceleration = {0.0, 0.0, 0.0};
@@ -42,6 +46,7 @@ public:
     std::array<double, 3> position;
     std::array<double, 3> velocity;
     std::array<double, 3> acceleration; // for Velocity Verlet
+    bool exist = true;
 
     Centaur(const std::string name,
             const std::array<double, 3> &startPos,
@@ -62,7 +67,7 @@ public:
     const long nSteps = 1e6; // 1e6
 
     Celestial Sun;
-    std::vector<Celestial> planets;
+    std::vector<Celestial> celestials;
     std::vector<Centaur> centaurs;
 
     std::vector<std::vector<std::string>> celestialData;
@@ -77,22 +82,17 @@ public:
     double rCubed = 0.0;
     double GMrCubed = 0.0;
     double tempEnergy = 0.0;
-    std::vector<double> systemEnergy;
+    std::vector<double> celestialEnergy;
+    std::vector<double> centaurEnergy;
 
     SolarSystem()
-        : Sun(Celestial("Sun",
-                        {0.0, 0.0, 0.0},
-                        {0.0, 0.0, 0.0},
-                        1.989e30))
-          // read data
-          ,
-          celestialData(readCSV("Data\\celestialDataReduced.csv")), centaurData(readCSV("Data\\CentaursCartesian.csv"))
+        :celestialData(readCSV("Data\\celestialDataReduced.csv")), centaurData(readCSV("Data\\CentaursCartesian.csv"))
     {
-        // create planets
+        // create celestials
         nCelestials = celestialData.size();
         for (int i = 0; i < nCelestials; i++)
         {
-            planets.push_back(Celestial(
+            celestials.push_back(Celestial(
                 celestialData[i][0],
                 {std::stod(celestialData[i][1]),
                  std::stod(celestialData[i][2]),
@@ -100,7 +100,8 @@ public:
                 {std::stod(celestialData[i][4]),
                  std::stod(celestialData[i][5]),
                  std::stod(celestialData[i][6])},
-                std::stod(celestialData[i][7])));
+                std::stod(celestialData[i][7]),
+                std::stod(celestialData[i][8])));
         }
 
         // create centaurs
@@ -120,177 +121,172 @@ public:
     // -------------------------------------------------
     // Compute the net acceleration for each planet at index t
     // -------------------------------------------------
-    void computePlanetsAcceleration(int t)
+    void computeCelestialsAcceleration(int &t)
     {
+        // recalculate acceleration for each celestial
         for (int i = 0; i < nCelestials; i++)
         {
-            std::array<double, 3> aLocal = {0.0, 0.0, 0.0};
-
-            // planet-planet gravitational pull
+            celestials[i].acceleration = {0.0, 0.0, 0.0};
+            // gravitational pull from other celestials
             for (int j = 0; j < nCelestials; j++)
             {
-                if (j == i)
+                if (j == i) {
                     continue;
-                rVec = subtract3D(planets[i].position, planets[j].position);
-                rCubed = calcCube(rVec);
-                GMrCubed = planets[j].GM / rCubed;
-                aLocal[0] -= GMrCubed * rVec[0];
-                aLocal[1] -= GMrCubed * rVec[1];
-                aLocal[2] -= GMrCubed * rVec[2];
+                } else {
+                    rVec = subtract3D(celestials[i].position, celestials[j].position);
+                    rCubed = calcCube(rVec);
+                    GMrCubed = celestials[j].GM / rCubed;
+                    celestials[i].acceleration[0] -= GMrCubed * rVec[0];
+                    celestials[i].acceleration[1] -= GMrCubed * rVec[1];
+                    celestials[i].acceleration[2] -= GMrCubed * rVec[2];
+                }
             }
-
-            planets[i].acceleration = aLocal;
         }
     }
 
     // -------------------------------------------------
     // Compute the net acceleration for each centaur at index t
     // -------------------------------------------------
-    void computeCentaursAcceleration(int t)
+    void computeCentaursAcceleration(int &t)
     {
+        // recalculate acceleration for each celestial
         for (int i = 0; i < nCentaurs; i++)
         {
-            std::array<double, 3> aLocal = {0.0, 0.0, 0.0};
-
-            // from planets
+            centaurs[i].acceleration = {0.0, 0.0, 0.0};
+            // acceleration from celestials
             for (int j = 0; j < nCelestials; j++)
             {
-                rVec = subtract3D(centaurs[i].position, planets[j].position);
+                rVec = subtract3D(centaurs[i].position, celestials[j].position);
                 rCubed = calcCube(rVec);
-                GMrCubed = planets[j].GM / rCubed;
-                aLocal[0] -= GMrCubed * rVec[0];
-                aLocal[1] -= GMrCubed * rVec[1];
-                aLocal[2] -= GMrCubed * rVec[2];
+                GMrCubed = celestials[j].GM / rCubed;
+                centaurs[i].acceleration[0] -= GMrCubed * rVec[0];
+                centaurs[i].acceleration[1] -= GMrCubed * rVec[1];
+                centaurs[i].acceleration[2] -= GMrCubed * rVec[2];
             }
-
-            centaurs[i].acceleration = aLocal;
         }
     }
 
     // -------------------------------------------------
-    // Velocity Verlet update for planets
+    // Velocity Verlet update for celestials
     // -------------------------------------------------
-    void updatePlanets(int t)
+    void updateCelestials(int &t)
     {
         // half-step velocity + position
         for (int i = 0; i < nCelestials; i++)
         {
             // half-step velocity
-            planets[i].velocity[0] += 0.5 * dt * planets[i].acceleration[0];
-            planets[i].velocity[1] += 0.5 * dt * planets[i].acceleration[1];
-            planets[i].velocity[2] += 0.5 * dt * planets[i].acceleration[2];
+            celestials[i].velocity[0] += 0.5 * dt * celestials[i].acceleration[0];
+            celestials[i].velocity[1] += 0.5 * dt * celestials[i].acceleration[1];
+            celestials[i].velocity[2] += 0.5 * dt * celestials[i].acceleration[2];
 
             // position update
-            planets[i].position[0] = planets[i].position[0] + dt * planets[i].velocity[0];
-            planets[i].position[1] = planets[i].position[1] + dt * planets[i].velocity[1];
-            planets[i].position[2] = planets[i].position[2] + dt * planets[i].velocity[2];
+            celestials[i].position[0] = celestials[i].position[0] + dt * celestials[i].velocity[0];
+            celestials[i].position[1] = celestials[i].position[1] + dt * celestials[i].velocity[1];
+            celestials[i].position[2] = celestials[i].position[2] + dt * celestials[i].velocity[2];
         }
 
         // recompute acceleration at new positions
-        std::vector<std::array<double, 3>> newA(nCelestials, {0.0, 0.0, 0.0});
         for (int i = 0; i < nCelestials; i++)
         {
-            std::array<double, 3> aLocal = {0.0, 0.0, 0.0};
-
-            // planet-planet
+            celestials[i].acceleration = {0.0, 0.0, 0.0};
+            // gravitational pull from other celestials
             for (int j = 0; j < nCelestials; j++)
             {
-                if (j == i)
+                if (j == i) {
                     continue;
-                rVec = subtract3D(planets[i].position, planets[j].position);
-                rCubed = calcCube(rVec);
-                GMrCubed = planets[j].GM / rCubed;
-                aLocal[0] -= GMrCubed * rVec[0];
-                aLocal[1] -= GMrCubed * rVec[1];
-                aLocal[2] -= GMrCubed * rVec[2];
+                } else{
+                    rVec = subtract3D(celestials[i].position, celestials[j].position);
+                    rCubed = calcCube(rVec);
+                    GMrCubed = celestials[j].GM / rCubed;
+                    celestials[i].acceleration[0] -= GMrCubed * rVec[0];
+                    celestials[i].acceleration[1] -= GMrCubed * rVec[1];
+                    celestials[i].acceleration[2] -= GMrCubed * rVec[2];
+                }
             }
 
-            newA[i] = aLocal;
-        }
-
-        // second half-step velocity update
-        for (int i = 0; i < nCelestials; i++)
-        {
-            planets[i].velocity[0] += 0.5 * dt * newA[i][0];
-            planets[i].velocity[1] += 0.5 * dt * newA[i][1];
-            planets[i].velocity[2] += 0.5 * dt * newA[i][2];
-
-            planets[i].acceleration = newA[i]; // store for next iteration
+            celestials[i].velocity[0] += 0.5 * dt * celestials[i].acceleration[0];
+            celestials[i].velocity[1] += 0.5 * dt * celestials[i].acceleration[1];
+            celestials[i].velocity[2] += 0.5 * dt * celestials[i].acceleration[2];
         }
     }
 
     // -------------------------------------------------
     // Velocity Verlet update for centaurs
     // -------------------------------------------------
-    void updateCentaurs(int t)
+    void updateCentaurs(int &t)
     {
+        // unlike the celestial class, the acceleration of a centaur
+        // does not depend on the position of the other centaurs
+        // thus the calculation can be done in one loop
+
         // 1) Half-step velocity + position
         for (int i = 0; i < nCentaurs; i++)
-        {
-            centaurs[i].velocity[0] += 0.5 * dt * centaurs[i].acceleration[0];
-            centaurs[i].velocity[1] += 0.5 * dt * centaurs[i].acceleration[1];
-            centaurs[i].velocity[2] += 0.5 * dt * centaurs[i].acceleration[2];
+        {   
+            if (centaurs[i].exist) {
 
-            centaurs[i].position[0] = centaurs[i].position[0] + dt * centaurs[i].velocity[0];
-            centaurs[i].position[1] = centaurs[i].position[1] + dt * centaurs[i].velocity[1];
-            centaurs[i].position[2] = centaurs[i].position[2] + dt * centaurs[i].velocity[2];
-        }
+                centaurs[i].velocity[0] += 0.5 * dt * centaurs[i].acceleration[0];
+                centaurs[i].velocity[1] += 0.5 * dt * centaurs[i].acceleration[1];
+                centaurs[i].velocity[2] += 0.5 * dt * centaurs[i].acceleration[2];
 
-        // compute new acceleration
-        std::vector<std::array<double, 3>> newA(nCentaurs, {0.0, 0.0, 0.0});
-        for (int i = 0; i < nCentaurs; i++)
-        {
-            std::array<double, 3> aLocal = {0.0, 0.0, 0.0};
+                centaurs[i].position[0] = centaurs[i].position[0] + dt * centaurs[i].velocity[0];
+                centaurs[i].position[1] = centaurs[i].position[1] + dt * centaurs[i].velocity[1];
+                centaurs[i].position[2] = centaurs[i].position[2] + dt * centaurs[i].velocity[2];
 
-            // from planets
-            for (int j = 0; j < nCelestials; j++)
-            {
-                rVec = subtract3D(centaurs[i].position, planets[j].position);
-                rCubed = calcCube(rVec);
-                GMrCubed = planets[j].GM / rCubed;
-                aLocal[0] -= GMrCubed * rVec[0];
-                aLocal[1] -= GMrCubed * rVec[1];
-                aLocal[2] -= GMrCubed * rVec[2];
+                // acceleration from celestials
+                centaurs[i].acceleration = {0.0, 0.0, 0.0};
+                for (int j = 0; j < nCelestials; j++)
+                {
+                    rVec = subtract3D(centaurs[i].position, celestials[j].position);
+                    rCubed = calcCube(rVec);
+
+                    if (rCubed < celestials[j].radiusCubed) {
+                        centaurs[i].exist = false;
+                        std::cout << "impact" << std::endl;
+                        break;
+                    } else {
+                        GMrCubed = celestials[j].GM / rCubed;
+                        centaurs[i].acceleration[0] -= GMrCubed * rVec[0];
+                        centaurs[i].acceleration[1] -= GMrCubed * rVec[1];
+                        centaurs[i].acceleration[2] -= GMrCubed * rVec[2];
+                    }
+                }
+
+                centaurs[i].velocity[0] += 0.5 * dt * centaurs[i].acceleration[0];
+                centaurs[i].velocity[1] += 0.5 * dt * centaurs[i].acceleration[1];
+                centaurs[i].velocity[2] += 0.5 * dt * centaurs[i].acceleration[2];
+
+            } else {
+                std::cout << "bad" << std::endl;
             }
-
-            newA[i] = aLocal;
-        }
-
-        // second half-step velocity update
-        for (int i = 0; i < nCentaurs; i++)
-        {
-            centaurs[i].velocity[0] += 0.5 * dt * newA[i][0];
-            centaurs[i].velocity[1] += 0.5 * dt * newA[i][1];
-            centaurs[i].velocity[2] += 0.5 * dt * newA[i][2];
-
-            centaurs[i].acceleration = newA[i]; // store for next iteration
         }
     }
 
     // -------------------------------------------------
     // Compute the total (kinetic + potential) energy in the system
     // -------------------------------------------------
-    void calcSystemEnergy(int t)
+    void calcSystemEnergy(int &t)
     {
+        // celestials
         tempEnergy = 0.0;
-
-        // planets
         for (int i = 0; i < nCelestials; i++)
         {
             // kinetic: 1/2 m v^2
-            vSquared = calcSquare(planets[i].velocity);
-            tempEnergy += 0.5 * planets[i].mass * vSquared;
+            vSquared = calcSquare(celestials[i].velocity);
+            tempEnergy += 0.5 * celestials[i].mass * vSquared;
 
             // potential from planet-planet
             for (int j = i + 1; j < nCelestials; j++)
             {
-                rVec = subtract3D(planets[i].position, planets[j].position);
+                rVec = subtract3D(celestials[i].position, celestials[j].position);
                 rNorm = calcNorm(rVec);
-                tempEnergy -= planets[i].GM * planets[j].mass / rNorm;
+                tempEnergy -= celestials[i].GM * celestials[j].mass / rNorm;
             }
         }
+        celestialEnergy.push_back(tempEnergy);
+        std::cout << "Celestial energy at step " << t << ": " << tempEnergy << std::endl;
 
         // centaurs: assume negligible mass => treat as m=1 for KE
+        tempEnergy = 0.0;
         for (int i = 0; i < nCentaurs; i++)
         {
             // kinetic
@@ -300,15 +296,13 @@ public:
             // potential from centaur-planet
             for (int j = 0; j < nCelestials; j++)
             {
-                rVec = subtract3D(centaurs[i].position, planets[j].position);
+                rVec = subtract3D(centaurs[i].position, celestials[j].position);
                 rNorm = calcNorm(rVec);
-                tempEnergy -= planets[j].GM / rNorm;
+                tempEnergy -= celestials[j].GM / rNorm;
             }
-
         }
-
-        std::cout << "Energy at step " << t << ": " << tempEnergy << std::endl;
-        systemEnergy.push_back(tempEnergy);
+        centaurEnergy.push_back(tempEnergy);
+        std::cout << "Centaur energy at step " << t << ": " << tempEnergy << std::endl;
     }
 
     // -------------------------------------------------
@@ -317,16 +311,17 @@ public:
     void simulate()
     {
         // compute initial accelerations at t=0
-        computePlanetsAcceleration(0);
-        computeCentaursAcceleration(0);
+        int t = 0;
+        computeCelestialsAcceleration(t);
+        computeCentaursAcceleration(t);
 
         // check energy at t=0
-        calcSystemEnergy(0);
+        calcSystemEnergy(t);
 
         std::cout << "Simulating..." << std::endl;
         for (int t = 1; t < nSteps; t++)
         {
-            updatePlanets(t);
+            updateCelestials(t);
             updateCentaurs(t);
 
             // check energy every 100000 steps
