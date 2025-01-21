@@ -62,7 +62,7 @@ class SolarSystem
 {
 public:
     int nCelestials;
-    const int nCentaurs = 1000;
+    const int nCentaurs = 903;
     const int dt = 1;        // 1 day
     const long nSteps = 1e6; // 1e6
 
