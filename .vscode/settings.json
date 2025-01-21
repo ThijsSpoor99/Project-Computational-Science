@@ -63,7 +63,8 @@
     "chrono": "cpp",
     "format": "cpp",
     "text_encoding": "cpp",
-    "cinttypes": "cpp"
+    "cinttypes": "cpp",
+    "*.txx": "cpp"
   },
   "r.lsp.promptToInstall": false
 }
