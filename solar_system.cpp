@@ -35,7 +35,7 @@ public:
     {
         position = startPos;
         acceleration = {0.0, 0.0, 0.0};
-        GM = GMtoAstro(GM);
+        GM = convertGM(GM);
     }
 };
 
@@ -66,7 +66,6 @@ public:
     const int dt = 1;        // 1 day
     const long nSteps = 1e6; // 1e6
 
-    Celestial Sun;
     std::vector<Celestial> celestials;
     std::vector<Centaur> centaurs;
 
@@ -88,7 +87,7 @@ public:
     int nImpacts = 0;
 
     SolarSystem()
-        :celestialData(readCSV("Data\\celestialDataReduced.csv")), centaurData(readCSV("Data\\CentaursCartesian.csv"))
+        :celestialData(readCSV("Data\\celestialData.csv")), centaurData(readCSV("Data\\centaurData.csv"))
     {
         // create celestials
         nCelestials = celestialData.size();
@@ -340,6 +339,8 @@ public:
 int main()
 {
     SolarSystem sim;
+
+    std::cout << "Sun GM: " << sim.celestials[0].GM << std::endl;
 
     // measure runtime
     auto startTime = std::chrono::high_resolution_clock::now();

@@ -44,7 +44,7 @@ public:
         position.resize(nSteps);
         position[0] = startPos;
         acceleration = {0.0, 0.0, 0.0};
-        GM = GMtoAstro(GM);
+        GM = convertGM(GM);
     }
 };
 
@@ -95,7 +95,7 @@ public:
     std::vector<double> systemEnergy;
 
     SolarSystem()
-        : celestialData(readCSV("..\\..\\..\\Data\\celestialDataReduced.csv")), centaurData(readCSV("..\\..\\..\\Data\\CentaursCartesian.csv"))
+        : celestialData(readCSV("..\\..\\..\\Data\\celestialData.csv")), centaurData(readCSV("..\\..\\..\\Data\\centaurData.csv"))
     {
         // create planets
         nCelestials = celestialData.size();

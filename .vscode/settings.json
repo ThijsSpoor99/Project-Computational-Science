@@ -66,5 +66,6 @@
     "cinttypes": "cpp",
     "*.txx": "cpp"
   },
-  "r.lsp.promptToInstall": false
+  "r.lsp.promptToInstall": false,
+  "cmake.sourceDirectory": "E:/GithubRepositories/Project-Computational-Science/vtkProject"
 }

@@ -35,7 +35,7 @@ public:
         position.resize(nSteps);
         position[0] = startPos;
         acceleration = {0.0, 0.0, 0.0};
-        GM = GMtoAstro(GM);
+        GM = convertGM(GM);
     }
 };
 

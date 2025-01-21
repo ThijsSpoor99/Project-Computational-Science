@@ -14,7 +14,7 @@
 namespace Constants {
     constexpr double G = 6.67430e-11;
     constexpr double AU = 1.495978707e11;
-    constexpr double day = 24 * 60 * 60;
+    constexpr double day = 8.64e4;
 }
 
 // Function definitions
@@ -23,6 +23,12 @@ namespace Constants {
 inline double GMtoAstro(const double &GM) {
     double factor = (8.6400e4 * 8.6400e4) / (Constants::AU * Constants::AU * Constants::AU);
     return factor * GM;
+}
+
+// Converts GM from m^3/s^2 to km^3/day^2
+inline double convertGM(const double &GM) {
+    double factor = (Constants::day * Constants::day) / (1e9);
+    return factor * GM; 
 }
 
 // Converts a 3D vector from meters to astronomical units
