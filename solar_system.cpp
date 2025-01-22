@@ -90,6 +90,7 @@ public:
     std::vector<double> centaurIndividualEnergies;
 
     int nImpacts = 0;
+    int nInner = 0;
 
     SolarSystem()
         : celestialData(readCSV("Data\\celestialData.csv")),
@@ -112,6 +113,41 @@ public:
         }
 
         // create centaurs
+        for (int i = 0; i < nCentaurs; i++)
+        {
+            centaurs.push_back(Centaur(
+                centaurData[i][0],
+                {std::stod(centaurData[i][1]),
+                 std::stod(centaurData[i][2]),
+                 std::stod(centaurData[i][3])},
+                {std::stod(centaurData[i][4]),
+                 std::stod(centaurData[i][5]),
+                 std::stod(centaurData[i][6])}));
+        }
+    }
+
+    void reset() 
+    {
+        nImpacts = 0;
+        nInner = 0;
+        // create celestials
+        celestials = {};
+        for (int i = 0; i < nCelestials; i++)
+        {
+            celestials.push_back(Celestial(
+                celestialData[i][0],
+                {std::stod(celestialData[i][1]),
+                 std::stod(celestialData[i][2]),
+                 std::stod(celestialData[i][3])},
+                {std::stod(celestialData[i][4]),
+                 std::stod(celestialData[i][5]),
+                 std::stod(celestialData[i][6])},
+                std::stod(celestialData[i][7]),
+                std::stod(celestialData[i][8])));
+        }
+
+        // create centaurs
+        centaurs = {};
         for (int i = 0; i < nCentaurs; i++)
         {
             centaurs.push_back(Centaur(
@@ -224,8 +260,16 @@ public:
         // half-step velocity + position
         for (int i = 0; i < nCentaurs; i++)
         {
+            rVec = subtract3D(celestials[0].position, centaurs[i].position);
+            rNorm = calcNorm(rVec);
+
             if (!centaurs[i].exist)
                 continue;
+
+            if (rNorm < 1.5e8) {
+                centaurs[i].exist = false;
+                nInner += 1;
+            }
 
             centaurs[i].velocity[0] += 0.5 * dt * centaurs[i].acceleration[0];
             centaurs[i].velocity[1] += 0.5 * dt * centaurs[i].acceleration[1];
@@ -402,16 +446,20 @@ public:
 int main()
 {
     SolarSystem sim;
+    for (double n = 0; n < 2.1; n+=0.2) {     
+        sim.celestials[3].GM *= n;
 
-    std::cout << "Sun GM: " << sim.celestials[0].GM << std::endl;
+        // measure runtime
+        auto startTime = std::chrono::high_resolution_clock::now();
+        sim.simulate();
+        auto stopTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
 
-    // measure runtime
-    auto startTime = std::chrono::high_resolution_clock::now();
-    sim.simulate();
-    auto stopTime = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
+        std::cout << "Total simulation time: " << duration.count() << " ms" << std::endl;
+        std::cout << "Inner asteroids: " << sim.nInner << " (n=" << n << ")" <<std::endl;
 
-    std::cout << "Total simulation time: " << duration.count() << " ms" << std::endl;
+        sim.reset();
+    }
 
     return 0;
 }
