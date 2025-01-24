@@ -64,8 +64,10 @@
     "format": "cpp",
     "text_encoding": "cpp",
     "cinttypes": "cpp",
-    "*.txx": "cpp"
+    "*.txx": "cpp",
+    "xstring": "cpp"
   },
   "r.lsp.promptToInstall": false,
-  "cmake.sourceDirectory": "E:/GithubRepositories/Project-Computational-Science/vtkProject"
+  "cmake.sourceDirectory": "E:/GithubRepositories/Project-Computational-Science/vtkProject",
+  "C_Cpp.errorSquiggles": "disabled"
 }

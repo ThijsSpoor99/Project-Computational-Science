@@ -72,6 +72,7 @@ public:
 class SolarSystem
 {
 public:
+    std::string pathToData;
     int nCelestials;
     int nCentaurs = 100;
     int dt = 1;
@@ -105,9 +106,10 @@ public:
     double innerBoundary = 5.0 * Constants::AU * 1.0e-3;
     double outerBoundary = 1000.0 * Constants::AU * 1.0e-3;
 
-    SolarSystem() {
+    SolarSystem(const std::string& inputPath = "Data\\") 
+        : pathToData(inputPath) {
         // create celestials
-        celestialData = readCSV("Data\\celestialData.csv");
+        celestialData = readCSV(pathToData + "celestialData.csv");
         nCelestials = celestialData.size();
         for (int i = 0; i < nCelestials; i++)
         {
@@ -129,7 +131,7 @@ public:
         }
 
         // create centaurs
-        centaurData = readCSV("Data\\centaurData.csv");
+        centaurData = readCSV(pathToData + "centaurData.csv");
         for (int i = 0; i < nCentaurs; i++)
         {
             centaurs.push_back(Centaur(
