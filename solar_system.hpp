@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <cmath>
 #include <chrono>
+#include <omp.h>
 
 #include "Include\util.hpp"
 
@@ -88,7 +89,7 @@ class SolarSystem
 public:
     std::string pathToData;
     int nCelestials;
-    int nCentaurs = 1000;
+    int nCentaurs;
     int dt = 1;
 
     std::vector<Celestial> celestials;
@@ -122,8 +123,8 @@ public:
     double innerBoundary = 5.0 * Constants::AU * 1.0e-3;
     double outerBoundary = 1000.0 * Constants::AU * 1.0e-3;
 
-    SolarSystem(const std::string& inputPath = "Data\\", int inputMaxTimesteps = 0) 
-        : pathToData(inputPath), maxTimesteps(inputMaxTimesteps) {
+    SolarSystem(const std::string& inputPath = "Data\\", int inputMaxTimesteps = 0, int inputNCentaurs = 1000) 
+        : pathToData(inputPath), maxTimesteps(inputMaxTimesteps), nCentaurs(inputNCentaurs) {
         // create celestials
         celestialData = readCSV(pathToData + "celestialData.csv");
         nCelestials = celestialData.size();
@@ -148,6 +149,11 @@ public:
 
         // create centaurs
         centaurData = readCSV(pathToData + "centaurData.csv");
+
+        if (centaurData.size() < nCentaurs) {
+            throw std::runtime_error("Not enough data in centaurData.csv to initialize all centaurs.");
+        }
+
         for (int i = 0; i < nCentaurs; i++)
         {
             centaurs.push_back(Centaur(
@@ -304,6 +310,10 @@ public:
         for (int i=0; i<nCentaurs; i++) {
             // check if centaur still needs to be updated
             if (!centaurs[i].exist) {
+                // save position to history if within maxTimesteps
+                if (centaurs[i].positionHistory.size() < maxTimesteps) {
+                    centaurs[i].savePosition();
+                }
                 continue;
             }
 

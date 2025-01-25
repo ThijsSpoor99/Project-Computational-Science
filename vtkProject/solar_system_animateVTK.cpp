@@ -80,10 +80,18 @@ void saveObjectPositionsVTK(SolarSystem sim) {
             colors->InsertNextTuple3(celColors[i][0], celColors[i][1], celColors[i][2]);
             labels->InsertNextValue(sim.celestials[i].name);
         }
+
+        for (const auto& centaur : sim.centaurs) {
+            if (centaur.positionHistory.size() < sim.maxTimesteps) {
+                std::cerr << "Centaur '" << centaur.name << "' has insufficient positionHistory size: " 
+                        << centaur.positionHistory.size() << ", expected: " << sim.maxTimesteps << ", alive" << centaur.exist << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
         // Add centaur data
         for (const auto& centaur : sim.centaurs) {
             points->InsertNextPoint(centaur.positionHistory[t].data());
-            radii->InsertNextValue(0.05); // Example small radius for centaurs
+            radii->InsertNextValue(celestialRadii[2]); //set Radii, same size as smallest planet
             if (centaur.inner) {
                 colors->InsertNextTuple3(255, 0, 0); // color: red
             } else if (centaur.outer) {
@@ -115,15 +123,18 @@ void saveObjectPositionsVTK(SolarSystem sim) {
 
 int main()
 {
-    int SimulationTime = 1e6;
-    int timeStepsSaved = 500;
+    int SimulationTime = 1500;
+    int timeStepsSaved = 1000;
+    int nCentaurs = 66884;
 
-    SolarSystem sim(PATH_TO_DATA, timeStepsSaved);
+    //int nCentaurs = 10000;
+
+    SolarSystem sim(PATH_TO_DATA, timeStepsSaved, nCentaurs);
     
     auto startTime = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < SimulationTime; i++)
     {
-        if (i % 100000 == 0) {
+        if (i % 1000 == 0) {
             std::cout << "Timestep: " << i << std::endl;
         }
         sim.performTimestep();
