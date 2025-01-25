@@ -28,6 +28,9 @@ public:
     double potentialEnergy = 0.0;
     double totalEnergy = 0.0;
 
+    // Position history
+    std::vector<std::array<double, 3>> positionHistory;
+
     Celestial() = default;
     Celestial(const std::string &inputName,
               const std::array<double, 3> &startPos,
@@ -41,6 +44,10 @@ public:
         GM = Constants::G * inputMass;
         GM = convertGM(GM);
         radius = inputRadius;
+    }
+    // Save current position to history
+    void savePosition() {
+        positionHistory.push_back(position);
     }
 };
 
@@ -59,6 +66,9 @@ public:
     double potentialEnergy = 0.0;
     double totalEnergy = 0.0;
 
+    // Position history
+    std::vector<std::array<double, 3>> positionHistory;
+
     Centaur() = default;
     Centaur(const std::string &inputName,
             const std::array<double, 3> &startPos,
@@ -67,6 +77,10 @@ public:
         position = startPos;
         velocity = startVel;
     }
+    // Save current position to history
+    void savePosition() {
+        positionHistory.push_back(position);
+    }
 };
 
 class SolarSystem
@@ -74,7 +88,7 @@ class SolarSystem
 public:
     std::string pathToData;
     int nCelestials;
-    int nCentaurs = 100;
+    int nCentaurs = 1000;
     int dt = 1;
 
     std::vector<Celestial> celestials;
@@ -86,6 +100,8 @@ public:
     // temporary vectors used in computations
     std::array<double, 3> rVec;
     std::array<double, 3> aVec;
+
+    int maxTimesteps; // Number of timesteps to store positions
 
     // temporary doubles used in computations
     double vSquared = 0.0;
@@ -106,8 +122,8 @@ public:
     double innerBoundary = 5.0 * Constants::AU * 1.0e-3;
     double outerBoundary = 1000.0 * Constants::AU * 1.0e-3;
 
-    SolarSystem(const std::string& inputPath = "Data\\") 
-        : pathToData(inputPath) {
+    SolarSystem(const std::string& inputPath = "Data\\", int inputMaxTimesteps = 0) 
+        : pathToData(inputPath), maxTimesteps(inputMaxTimesteps) {
         // create celestials
         celestialData = readCSV(pathToData + "celestialData.csv");
         nCelestials = celestialData.size();
@@ -265,6 +281,12 @@ public:
         }
 
         for (int i=0; i<nCelestials; i++) {
+
+            // Save position to history if within maxTimesteps
+            if (celestials[i].positionHistory.size() < maxTimesteps) {
+                celestials[i].savePosition();
+            }
+
             // calculate acceleration after full position step
             computeCelestialAcceleration(i);
 
@@ -308,6 +330,11 @@ public:
             centaurs[i].position[0] += dt * centaurs[i].velocity[0];
             centaurs[i].position[1] += dt * centaurs[i].velocity[1];
             centaurs[i].position[2] += dt * centaurs[i].velocity[2];
+
+            // save position to history if within maxTimesteps
+            if (centaurs[i].positionHistory.size() < maxTimesteps) {
+                centaurs[i].savePosition();
+            }
 
             // calculate acceleration after full position step
             // does not depend on other centaurs
