@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <iomanip> 
 
 // Universal constants
 namespace Constants {
@@ -115,8 +116,56 @@ inline void saveToCSV(const std::vector<std::array<double, 3>>& data, const std:
     }
 
     // Loop through the rows and columns to write the data
+    for (size_t i = 0; i < data.size(); i+=1) {
+        for (size_t j = 0; j < data[i].size(); j+=1) {
+            file << data[i][j];
+            if (j != data[i].size() - 1) {
+                file << ",";  // Add comma between elements in a row
+            }
+        }
+        file << "\n";  // New line after each row
+    }
+
+    file.close();
+    std::cout << "Data successfully written to " << filepath << std::endl;
+}
+
+inline void save1DVector(const std::vector<double> &data, const std::string &filepath) {
+    std::ofstream file(filepath);
+    
+    if (!file.is_open()) {
+        std::cerr << "Error opening file with path: " << filepath << std::endl;
+        return;
+    }
+
+    // Use a string stream for efficient string construction
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(15);
+
     for (size_t i = 0; i < data.size(); ++i) {
-        for (size_t j = 0; j < data[i].size(); ++j) {
+        oss << data[i];
+        if (i != data.size() - 1) {
+            oss << ",";
+        }
+    }
+    
+    file << oss.str() << std::endl; // Write the constructed string to the file
+
+    file.close();
+    std::cout << "Vector successfully written to " << filepath << std::endl;
+}
+
+inline void save2DVector(const std::vector<std::vector<double>>& data, const std::string& filepath) {
+    std::ofstream file(filepath);
+    
+    if (!file.is_open()) {
+        std::cerr << "Error opening file with path: " << filepath << std::endl;
+        return;
+    }
+
+    // Loop through the rows and columns to write the data
+    for (size_t i = 0; i < data.size(); i+=1) {
+        for (size_t j = 0; j < data[i].size(); j+=1) {
             file << data[i][j];
             if (j != data[i].size() - 1) {
                 file << ",";  // Add comma between elements in a row

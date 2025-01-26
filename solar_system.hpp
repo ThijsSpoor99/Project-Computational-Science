@@ -44,7 +44,7 @@ public:
         mass = inputMass;
         GM = Constants::G * inputMass;
         GM = convertGM(GM);
-        radius = inputRadius;
+        radius = 1e6;
     }
     // Save current position to history
     void savePosition() {
@@ -120,10 +120,10 @@ public:
     int nOuter = 0;
 
     // boundary in km
-    double innerBoundary = 5.0 * Constants::AU * 1.0e-3;
+    double innerBoundary = 0 * Constants::AU * 1.0e-3;
     double outerBoundary = 1000.0 * Constants::AU * 1.0e-3;
 
-    SolarSystem(const std::string& inputPath = "Data\\", int inputMaxTimesteps = 0, int inputNCentaurs = 1000) 
+    SolarSystem(const std::string& inputPath = "Data\\", int inputMaxTimesteps = 0, int inputNCentaurs = 65) 
         : pathToData(inputPath), maxTimesteps(inputMaxTimesteps), nCentaurs(inputNCentaurs) {
         // create celestials
         celestialData = readCSV(pathToData + "celestialData.csv");
@@ -259,7 +259,7 @@ public:
             if (rNorm < celestials[j].radius) {
                 centaurs[i].exist = false;
                 nImpacts += 1;
-                std::cout << "Impact with " << celestials[j].name << std::endl;
+                std::cout << "Impact with " << celestials[j].name << " at i=" << i << std::endl;
             }
 
             GMrCubed = celestials[j].GM / (rNorm * rNorm * rNorm);
@@ -355,8 +355,6 @@ public:
             centaurs[i].velocity[0] += 0.5 * dt * centaurs[i].acceleration[0];
             centaurs[i].velocity[1] += 0.5 * dt * centaurs[i].acceleration[1];
             centaurs[i].velocity[2] += 0.5 * dt * centaurs[i].acceleration[2];
-
-
         }
     }
 
@@ -372,7 +370,7 @@ public:
         for (int j=0; j<nCelestials; j++) {
 
             // no potential with itself
-            if (i=j) {
+            if (i==j) {
                 continue;
             }
 
@@ -420,6 +418,10 @@ public:
         // energy from centaurs
         centaurEnergy = 0.0;
         for (int i=0; i<nCentaurs; i++) {
+            if (!centaurs[i].exist) {
+                centaurEnergy += centaurs[i].totalEnergy;
+                continue;
+            }
             calcCentaurEnergy(i);
             centaurEnergy += centaurs[i].totalEnergy;
         }
