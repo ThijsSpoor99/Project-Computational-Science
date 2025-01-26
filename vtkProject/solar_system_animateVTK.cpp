@@ -123,18 +123,18 @@ void saveObjectPositionsVTK(SolarSystem sim) {
 
 int main()
 {
-    int SimulationTime = 1500;
-    int timeStepsSaved = 1000;
-    int nCentaurs = 66884;
+    int SimulationTime = 1e6;
+    int timeStepsSaved = 3000;
+    //int nCentaurs = 66884;
 
-    //int nCentaurs = 10000;
+    int nCentaurs = 5000;
 
     SolarSystem sim(PATH_TO_DATA, timeStepsSaved, nCentaurs);
     
     auto startTime = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < SimulationTime; i++)
     {
-        if (i % 1000 == 0) {
+        if (i % 10000 == 0) {
             std::cout << "Timestep: " << i << std::endl;
         }
         sim.performTimestep();
