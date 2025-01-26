@@ -13,7 +13,7 @@
 
 int main(void) {
     SolarSystem solarSystem("Data\\", 0, 20000);
-    //solarSystem.celestials[3].GM *= 0.2;
+    //solarSystem.celestials[3].GM *= 2;
 
     // run the simulation
     for (int t=0; t<1e6; t++) {
