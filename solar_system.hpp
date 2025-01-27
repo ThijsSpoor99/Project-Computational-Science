@@ -202,6 +202,9 @@ public:
         // calculate all energies at t=0
         calcSystemEnergy();
 
+        nInner = 0;
+        nOuter = 0;
+        nImpacts = 0;
 
     }
 
