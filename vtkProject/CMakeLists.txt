@@ -1,30 +1,21 @@
 cmake_minimum_required(VERSION 3.10)
 
-# Set the project name
-project(ProjectComputationalScience)
+# Set the project name and language
+project(ProjectComputationalScience VERSION 1.0 LANGUAGES CXX)
 
-# Set the C++ standard to C++17
+# Set the C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Set optimization flags for Release build
-# for release build do cmake -DCMAKE_BUILD_TYPE=Release ..
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native")
+# Compiler-specific optimization flags
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native")
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /arch:AVX2 /Ob3 /fp:fast")
 endif()
 
-# Set debug symbols for Debug build
-# for debug build do cmake -DCMAKE_BUILD_TYPE=Debug ..
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
-endif()
-
-# Find the VTK package
+# Find and link the VTK package
 find_package(VTK REQUIRED)
-
-find_package(OpenMP REQUIRED)
-
-# Include the VTK headers
 include(${VTK_USE_FILE})
 
 # Add the executable
@@ -32,4 +23,3 @@ add_executable(solar_system_animateVTK solar_system_animateVTK.cpp)
 
 # Link the VTK libraries
 target_link_libraries(solar_system_animateVTK ${VTK_LIBRARIES})
-target_link_libraries(solar_system_animateVTK OpenMP::OpenMP_CXX)
