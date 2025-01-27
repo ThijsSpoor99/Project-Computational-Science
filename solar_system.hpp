@@ -77,6 +77,7 @@ public:
     int nCelestials;
     int nCentaurs;
     int dt = 1;
+    double bias;
 
     std::vector<Celestial> celestials;
     std::vector<Centaur> centaurs;
@@ -107,8 +108,8 @@ public:
     double innerBoundary = 0 * Constants::AU * 1.0e-3;
     double outerBoundary = 1000.0 * Constants::AU * 1.0e-3;
 
-    SolarSystem(const std::string& inputPath = "Data\\", int inputNCentaurs = 65) 
-        : pathToData(inputPath), nCentaurs(inputNCentaurs) {
+    SolarSystem(const std::string& inputPath = "Data\\", int inputNCentaurs = 65, double inputBias = 1.0) 
+        : pathToData(inputPath), nCentaurs(inputNCentaurs), bias(inputBias) {
         // create celestials
         celestialData = readCSV(pathToData + "celestialData.csv");
         nCelestials = celestialData.size();
@@ -145,9 +146,9 @@ public:
                 {std::stod(centaurData[i][1]),
                  std::stod(centaurData[i][2]),
                  std::stod(centaurData[i][3])},
-                {std::stod(centaurData[i][4]),
-                 std::stod(centaurData[i][5]),
-                 std::stod(centaurData[i][6])}));
+                {std::stod(centaurData[i][4]) * bias,
+                 std::stod(centaurData[i][5]) * bias,
+                 std::stod(centaurData[i][6]) * bias}));
 
             // calculate acceleration at t=0
             computeCentaurAcceleration(i);
@@ -191,9 +192,9 @@ public:
                 {std::stod(centaurData[i][1]),
                  std::stod(centaurData[i][2]),
                  std::stod(centaurData[i][3])},
-                {std::stod(centaurData[i][4]),
-                 std::stod(centaurData[i][5]),
-                 std::stod(centaurData[i][6])}));
+                {std::stod(centaurData[i][4]) * bias,
+                 std::stod(centaurData[i][5]) * bias,
+                 std::stod(centaurData[i][6]) * bias}));
             
             // calculate acceleration at t=0
             computeCentaurAcceleration(i);
