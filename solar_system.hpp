@@ -10,7 +10,6 @@
 #include <filesystem>
 #include <cmath>
 #include <chrono>
-#include <omp.h>
 
 #include "Include\util.hpp"
 
@@ -41,7 +40,7 @@ public:
         mass = inputMass;
         GM = Constants::G * inputMass;
         GM = convertGM(GM);
-        radius = 1e6;
+        radius = inputRadius;
     }
 };
 
@@ -105,7 +104,7 @@ public:
     int nOuter = 0;
 
     // boundary in km
-    double innerBoundary = 0 * Constants::AU * 1.0e-3;
+    double innerBoundary = 2 * Constants::AU * 1.0e-3;
     double outerBoundary = 1000.0 * Constants::AU * 1.0e-3;
 
     SolarSystem(const std::string& inputPath = "Data\\", int inputNCentaurs = 65, double inputBias = 1.0) 
