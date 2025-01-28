@@ -26,9 +26,11 @@ const std::string PATH_TO_DATA = "..\\..\\..\\Data\\";
 
 void saveObjectPositionsVTK(SolarSystem sim, 
                             std::vector<std::vector<std::array<double, 3>>> celestialPosData, 
-                            std::vector<std::vector<std::array<double, 3>>> centaurPosData) {
+                            std::vector<std::vector<std::array<double, 3>>> centaurPosData,
+                            std::vector<int> centaurClasses,
+                            std::string dirName) {
     // Create the VTK directory
-    std::string vtkDir = PATH_TO_DATA + "vtpData";
+    std::string vtkDir = PATH_TO_DATA + dirName;
     clearAndCreateDirectory(vtkDir);
 
     // Determine number of digits for file naming
@@ -58,13 +60,13 @@ void saveObjectPositionsVTK(SolarSystem sim,
         };
         //Logarithmically scaled radii of celestial objects between 0.4 and 1, for visualization purposes
         double celestialRadii[7] = {
-            1.,  // Sun 
-            0.47110485,    // Earth
-            0.4,    // Mars
-            0.74100869,   // Jupiter
-            0.72041347,   // Saturn
-            0.62676178,   // Uranus
-            0.62342535    // Neptune
+            100.0,       // Sun
+            47.110485,   // Earth
+            40.0,        // Mars
+            74.100869,   // Jupiter
+            72.041347,   // Saturn
+            62.676178,   // Uranus
+            62.342535    // Neptune
         };
 
         // Add celestial object data
@@ -77,15 +79,17 @@ void saveObjectPositionsVTK(SolarSystem sim,
         // Add centaur data
         for (int i = 0; i < centaurPosData.size(); i++) {
             points->InsertNextPoint(centaurPosData[i][t].data());
-            if (sim.centaurs[i].inner) {
-                colors->InsertNextTuple3(255, 0, 0); // color: red
-                radii->InsertNextValue(celestialRadii[3]); //set Radii, same size as Jupiter
-            } else if (sim.centaurs[i].outer) {
-                colors->InsertNextTuple3(255, 255, 0); // color: yellow
-                radii->InsertNextValue(celestialRadii[3]); //set Radii, same size as Jupiter
-            } else {
+            if (centaurClasses[i] == 0) {
                 colors->InsertNextTuple3(0, 255, 0); // color: green
-                radii->InsertNextValue(celestialRadii[2]); //set Radii, same size as Mars
+                radii->InsertNextValue(30); //set Radii, smaller as mars
+            } else if (centaurClasses[i] == 1) {
+                colors->InsertNextTuple3(255, 0, 0); // color: red
+                radii->InsertNextValue(30); //set Radii, same size as Jupiter
+            } else if (centaurClasses[i] == 2) {
+                colors->InsertNextTuple3(255, 255, 0); // color: yellow
+                radii->InsertNextValue(30); //set Radii, same size as Jupiter
+            } else {
+                
             }
         }
         
@@ -107,28 +111,19 @@ void saveObjectPositionsVTK(SolarSystem sim,
     }
 }
 
-int main()
-{
-    int SimulationTime = 1e6;
-    //int nCentaurs = 66884;
-
-    int nCentaurs = 1000;
-
-    SolarSystem sim(PATH_TO_DATA, nCentaurs);
+void runSimulation(int nCentaurs, int lowerbound, int upperbound, std::string dirName, std::vector<int> centaurClasses,
+                   double jupiterMassMultiplier) {
     
-    std::vector<std::vector<std::array<double, 3>>> celestialPosData;
-    std::vector<std::vector<std::array<double, 3>>> centaurPosData;
+    SolarSystem sim(PATH_TO_DATA, nCentaurs, 0.8);
+    sim.dt = 10;
+    sim.celestials[3].mass *= jupiterMassMultiplier;
 
-    celestialPosData.resize(sim.nCelestials);
-    centaurPosData.resize(sim.nCentaurs);
+    std::vector<std::vector<std::array<double, 3>>> celestialPosData(sim.nCelestials);
+    std::vector<std::vector<std::array<double, 3>>> centaurPosData(sim.nCentaurs);
 
-    auto startTime = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < SimulationTime; i++)
-    {
-        if (i % 10000 == 0) {
-            std::cout << "Timestep: " << i << std::endl;
-        }
-        if (i < 500) {
+    for (int i = 0; i < upperbound; i++)
+    {   
+        if (i > lowerbound) {
             for (int j = 0; j < sim.nCelestials; j++) {
                 celestialPosData[j].push_back(sim.celestials[j].position);
             }
@@ -138,13 +133,23 @@ int main()
         }
         sim.performTimestep();
     }
+    saveObjectPositionsVTK(sim, celestialPosData, centaurPosData, centaurClasses, dirName);
+}
 
-    saveObjectPositionsVTK(sim, celestialPosData, centaurPosData);
-
-    auto stopTime = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
-
-    std::cout << "Total simulation time: " << duration.count() << " ms" << std::endl;
+//24375
+int main()
+{   
+    
+    for (double factor=1.0; factor<1.1; factor+=0.75) {
+        std::string readName = "vtkSim/classes" + std::to_string(factor).substr(0, 4);
+        std::string writeName = "vtkdata" + std::to_string(factor).substr(0, 4);
+        std::vector<int> classes =  read1DVector(PATH_TO_DATA + readName + ".csv");
+        auto startTime = std::chrono::high_resolution_clock::now();
+        runSimulation(24375, 22500, 23500, writeName, classes, factor);
+        auto stopTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
+        std::cout << "Total simulation time 1: " << duration.count() << " ms" << std::endl;
+    }
 
     return 0;
 }
