@@ -140,12 +140,12 @@ void runSimulation(int nCentaurs, int lowerbound, int upperbound, std::string di
 int main()
 {   
     
-    for (double factor=1.0; factor<1.1; factor+=0.75) {
+    for (double factor=0.25; factor<1.76; factor+=0.75) {
         std::string readName = "vtkSim/classes" + std::to_string(factor).substr(0, 4);
         std::string writeName = "vtkdata" + std::to_string(factor).substr(0, 4);
         std::vector<int> classes =  read1DVector(PATH_TO_DATA + readName + ".csv");
         auto startTime = std::chrono::high_resolution_clock::now();
-        runSimulation(24375, 22500, 23500, writeName, classes, factor);
+        runSimulation(24375, 0, 5000, writeName, classes, factor);
         auto stopTime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
         std::cout << "Total simulation time 1: " << duration.count() << " ms" << std::endl;
