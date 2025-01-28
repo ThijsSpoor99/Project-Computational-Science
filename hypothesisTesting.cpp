@@ -5,11 +5,11 @@ int main()
     SolarSystem sim("Data\\", 24375, 0.8);
     sim.dt = 10;
 
-    int nSteps = int(1e6);
+    int nSteps = int(2e6);
     std::vector<int> nInner(nSteps);
     std::vector<int> nOuter(nSteps);
 
-    for (double factor=0.0; factor<2.1; factor+=0.25) {
+    for (double factor=0.0; factor<2.1; factor+=0.20) {
         sim.resetSimulation(); // to be sure
         sim.celestials[3].GM *= factor; 
         

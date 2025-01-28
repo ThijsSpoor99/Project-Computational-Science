@@ -54,7 +54,7 @@ inline std::array<double, 3> add3D(const std::array<double, 3> &v1, const std::a
 
 // Returns the norm (magnitude) of a 3D vector
 inline double calcNorm(const std::array<double, 3> &v) {
-    return std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    return std::hypot(v[0], v[1], v[2]);
 }
 
 // Returns the square of the norm of a 3D vector
@@ -64,8 +64,8 @@ inline double calcSquare(const std::array<double, 3> &v) {
 
 // Returns the cube of the norm of a 3D vector
 inline double calcCube(const std::array<double, 3> &v) {
-    double norm = calcNorm(v);
-    return norm * norm * norm;
+    double square = calcSquare(v);
+    return square * std::sqrt(square);
 }
 
 inline // imports csv data as 2D vector

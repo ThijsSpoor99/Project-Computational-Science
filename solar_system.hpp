@@ -40,7 +40,7 @@ public:
         mass = inputMass;
         GM = Constants::G * inputMass;
         GM = convertGM(GM);
-        radius = inputRadius;
+        radius = 1e6;
     }
 };
 
@@ -107,7 +107,7 @@ public:
     double innerBoundary = 2 * Constants::AU * 1.0e-3;
     double outerBoundary = 1000.0 * Constants::AU * 1.0e-3;
 
-    SolarSystem(const std::string& inputPath = "Data\\", int inputNCentaurs = 65, double inputBias = 1.0) 
+    SolarSystem(const std::string& inputPath = "Data\\", int inputNCentaurs = 24375, double inputBias = 0.8) 
         : pathToData(inputPath), nCentaurs(inputNCentaurs), bias(inputBias) {
         // create celestials
         celestialData = readCSV(pathToData + "celestialData.csv");
@@ -242,7 +242,6 @@ public:
             rNorm = calcNorm(rVec);
 
             // check for impact
-            // do not break for current timestep (energy conservation)
             if (rNorm < celestials[j].radius) {
                 centaurs[i].exist = false;
                 nImpacts += 1;
