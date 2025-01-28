@@ -179,6 +179,31 @@ inline void save1DIntVector(const std::vector<int> &data, const std::string &fil
     std::cout << "Vector successfully written to " << filepath << std::endl;
 }
 
+inline std::vector<int> read1DVector(const std::string &filepath) {
+    std::ifstream file(filepath);
+    std::vector<int> data;
+
+    if (!file.is_open()) {
+        std::cerr << "Error opening file with path: " << filepath << std::endl;
+        return data; // Return an empty vector
+    }
+
+    std::string line;
+    if (std::getline(file, line)) { // Read the first line of the file
+        std::istringstream iss(line);
+        std::string value;
+
+        // Parse comma-separated values
+        while (std::getline(iss, value, ',')) {
+            data.push_back(std::stoi(value)); // Convert string to double and add to vector
+        }
+    }
+
+    file.close();
+    std::cout << "Vector successfully read from " << filepath << std::endl;
+    return data;
+}
+
 inline void save2DVector(const std::vector<std::vector<double>>& data, const std::string& filepath) {
     std::ofstream file(filepath);
     

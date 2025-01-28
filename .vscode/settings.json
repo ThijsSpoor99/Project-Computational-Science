@@ -83,7 +83,14 @@
     "xmemory": "cpp",
     "xtr1common": "cpp",
     "xtree": "cpp",
-    "xutility": "cpp"
+    "xutility": "cpp",
+    "condition_variable": "cpp",
+    "set": "cpp",
+    "unordered_set": "cpp",
+    "mutex": "cpp",
+    "semaphore": "cpp",
+    "stop_token": "cpp",
+    "thread": "cpp"
   },
   "r.lsp.promptToInstall": false,
   "cmake.sourceDirectory": "C:/Users/david/OneDrive/Universiteit/Vakken/Minor/Project_Computational_Science/Project-Computational-Science/vtkProject",

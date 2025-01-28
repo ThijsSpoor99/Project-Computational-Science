@@ -60,13 +60,13 @@ void saveObjectPositionsVTK(SolarSystem sim,
         };
         //Logarithmically scaled radii of celestial objects between 0.4 and 1, for visualization purposes
         double celestialRadii[7] = {
-            100.0,       // Sun
-            47.110485,   // Earth
-            40.0,        // Mars
-            74.100869,   // Jupiter
-            72.041347,   // Saturn
-            62.676178,   // Uranus
-            62.342535    // Neptune
+            10.0,       // Sun
+            4.7110485,   // Earth
+            4.0,        // Mars
+            7.4100869,   // Jupiter
+            7.2041347,   // Saturn
+            6.2676178,   // Uranus
+            6.2342535    // Neptune
         };
 
         // Add celestial object data
@@ -81,13 +81,13 @@ void saveObjectPositionsVTK(SolarSystem sim,
             points->InsertNextPoint(centaurPosData[i][t].data());
             if (centaurClasses[i] == 0) {
                 colors->InsertNextTuple3(0, 255, 0); // color: green
-                radii->InsertNextValue(30); //set Radii, smaller as mars
+                radii->InsertNextValue(3); //set Radii, smaller as mars
             } else if (centaurClasses[i] == 1) {
                 colors->InsertNextTuple3(255, 0, 0); // color: red
-                radii->InsertNextValue(30); //set Radii, same size as Jupiter
+                radii->InsertNextValue(3); //set Radii, same size as Jupiter
             } else if (centaurClasses[i] == 2) {
                 colors->InsertNextTuple3(255, 255, 0); // color: yellow
-                radii->InsertNextValue(30); //set Radii, same size as Jupiter
+                radii->InsertNextValue(3); //set Radii, same size as Jupiter
             } else {
                 
             }
