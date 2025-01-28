@@ -176,4 +176,3 @@ cython_debug/
 test.*
 planets.json
 planetPositions
-*.csv

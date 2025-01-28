@@ -59,6 +59,8 @@ public:
     double potentialEnergy = 0.0;
     double totalEnergy = 0.0;
 
+    double initialEnergy = 0.0;
+
     Centaur() = default;
     Centaur(const std::string &inputName,
             const std::array<double, 3> &startPos,
@@ -155,6 +157,10 @@ public:
 
         // calculate all energies at t=0
         calcSystemEnergy();
+        
+        for (int i = 0; i < nCentaurs; i++) {
+            centaurs[i].initialEnergy = centaurs[i].totalEnergy;
+        }
     }
 
     // -------------------------------------------------
@@ -201,6 +207,9 @@ public:
 
         // calculate all energies at t=0
         calcSystemEnergy();
+        for (int i = 0; i < nCentaurs; i++) {
+            centaurs[i].initialEnergy = centaurs[i].totalEnergy;
+        }
 
         nInner = 0;
         nOuter = 0;
@@ -245,6 +254,7 @@ public:
             if (rNorm < celestials[j].radius) {
                 centaurs[i].exist = false;
                 nImpacts += 1;
+                centaurs[i].totalEnergy = centaurs[i].initialEnergy;
                 std::cout << "Impact with " << celestials[j].name << " at i=" << i << std::endl;
             }
 
