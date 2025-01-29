@@ -3,7 +3,7 @@
 int main()
 {
     SolarSystem sim("Data\\", 24375, 0.8);
-    sim.dt = 10;
+    sim.dt = 5;
 
     int nSteps = int(1e6);
     std::cout << "Beginning simulation" << std::endl;

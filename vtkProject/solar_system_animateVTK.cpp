@@ -114,7 +114,7 @@ void saveObjectPositionsVTK(SolarSystem sim,
 void runSimulation(int nCentaurs, int lowerbound, int upperbound, std::string dirName, std::vector<int> centaurClasses,
                    double jupiterMassMultiplier) {
     
-    SolarSystem sim(PATH_TO_DATA, nCentaurs, 0.8);
+    SolarSystem sim(PATH_TO_DATA, nCentaurs, 0.6);
     sim.dt = 10;
     sim.celestials[3].mass *= jupiterMassMultiplier;
 
