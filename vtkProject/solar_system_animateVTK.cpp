@@ -114,8 +114,8 @@ void saveObjectPositionsVTK(SolarSystem sim,
 void runSimulation(int nCentaurs, int lowerbound, int upperbound, std::string dirName, std::vector<int> centaurClasses,
                    double jupiterMassMultiplier) {
     
-    SolarSystem sim(PATH_TO_DATA, nCentaurs, 0.6);
-    sim.dt = 10;
+    SolarSystem sim(PATH_TO_DATA, nCentaurs, 1.0);
+    sim.dt = 5;
     sim.celestials[3].mass *= jupiterMassMultiplier;
 
     std::vector<std::vector<std::array<double, 3>>> celestialPosData(sim.nCelestials);
@@ -124,11 +124,13 @@ void runSimulation(int nCentaurs, int lowerbound, int upperbound, std::string di
     for (int i = 0; i < upperbound; i++)
     {   
         if (i > lowerbound) {
-            for (int j = 0; j < sim.nCelestials; j++) {
-                celestialPosData[j].push_back(sim.celestials[j].position);
-            }
-            for (int j = 0; j < sim.nCentaurs; j++) {
-                centaurPosData[j].push_back(sim.centaurs[j].position);
+            if (i % 2 == 0) {
+                for (int j = 0; j < sim.nCelestials; j++) {
+                    celestialPosData[j].push_back(sim.celestials[j].position);
+                }
+                for (int j = 0; j < sim.nCentaurs; j++) {
+                    centaurPosData[j].push_back(sim.centaurs[j].position);
+                }
             }
         }
         sim.performTimestep();
@@ -140,12 +142,16 @@ void runSimulation(int nCentaurs, int lowerbound, int upperbound, std::string di
 int main()
 {   
     
-    for (double factor=0.25; factor<1.76; factor+=0.75) {
-        std::string readName = "vtkSim/classes" + std::to_string(factor).substr(0, 4);
-        std::string writeName = "vtkdata" + std::to_string(factor).substr(0, 4);
+    for (double factor=1.0; factor<1.1; factor+=0.75) {
+        //std::string readName = "vtkCentaurClasses/classes" + std::to_string(factor).substr(0, 4);
+        ///std::string writeName = "vtkdata" + std::to_string(factor).substr(0, 4);
+
+        std::string readName = "vtkCentaurClasses\\classes_nobias";
+        std::string writeName = "vtkdataNo_bias";
+
         std::vector<int> classes =  read1DVector(PATH_TO_DATA + readName + ".csv");
         auto startTime = std::chrono::high_resolution_clock::now();
-        runSimulation(24375, 0, 5000, writeName, classes, factor);
+        runSimulation(24375, 0, 10000, writeName, classes, factor);
         auto stopTime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopTime - startTime);
         std::cout << "Total simulation time 1: " << duration.count() << " ms" << std::endl;
