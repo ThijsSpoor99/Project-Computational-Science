@@ -2,13 +2,13 @@
 
 int main()
 {
-    SolarSystem sim("Data\\", 24375, 0.8);
+    SolarSystem sim("Data\\", 24375, 1.0);
     sim.dt = 5;
 
-    int nSteps = int(1e6);
+    int nSteps = int(1e5);
     std::cout << "Beginning simulation" << std::endl;
 
-    for (double factor=0.25; factor<1.76; factor+=0.75) {
+    for (double factor=1.0; factor<1.1; factor+=1.5) {
         sim.resetSimulation(); // to be sure
         sim.celestials[3].GM *= factor; 
         
@@ -27,17 +27,16 @@ int main()
 
         std::vector<int> classes(sim.nCentaurs);
         for (int i=0; i<sim.nCentaurs; i++) {
-            if (sim.centaurs[i].exist) {
-                classes[i] = 0;
-            } else if (sim.centaurs[i].inner) {
+            if (sim.centaurs[i].inner) {
                 classes[i] = 1;
-            } else {
+            } else if (sim.centaurs[i].outer) {
                 classes[i] = 2;
+            } else {
+                classes[i] = 0;
             }
         }
-        std::string classesFilepath = "Data/vtkSim/classes" + std::to_string(factor).substr(0, 4) + ".csv";
-
-        save1DIntVector(classes, classesFilepath);
+        std::string classesFilepath = "Data/vtkCentaurClasses/classes" + std::to_string(factor).substr(0, 4) + ".csv";
+        save1DIntVector(classes, "Data/vtkCentaurClasses/classes_nobias.csv");
     }
 
     return 0;
