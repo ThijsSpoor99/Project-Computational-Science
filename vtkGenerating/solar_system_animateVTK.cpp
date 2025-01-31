@@ -1,6 +1,6 @@
 /* This file is used to create the .vtp files for the animations of the solar system and centaurs.
  * The .vtp files are created for the biased simulations with MGj = 0.25, 1.0, 1.75 and the unbiased simulation with MGj = 1.0.
- * The centaur classes are determined by the innerOuterCSVgenerating.cpp file and are used for the colors of the celestial objects.
+ * The centaur classes are determined by the centaurClassesCSVgenerating.cpp file and are used for the colors of the celestial objects.
  * 
  * NOTE:
  * The generated .vtp files are stored in seperate folders in the Data folder and can be visualized using the ParaView software.
