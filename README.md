@@ -3,6 +3,24 @@ This repository is for the course "Project Computational Science" at the Univers
 For a quick overview of the project we refer to (poster pdf location). For a more detailled description of
 the project, we refer to (report-file location).
 
+### Overview of repository
+
+#### TO ARCHIVE
+- CentaurGeneration/
+- solar_system.7z
+- solar_system.cpp
+- solar_system_animate.cpp
+- solar_system_hpp.cpp
+
+#### TO MOVE
+- energy_output_verlet.csv
+
+#### Structure and brief description
+__Archive\\__ > contains code among other things which are not used anymore in the final version <br>
+__Data\\__ > contains all data that is (generated and) used in our project <br>
+__Figures\\__ > contains all figures and videos that are generated in our project <br>
+__Include\\__ > contains various .hpp files that are included in our code <br>
+
 
 ### Required Packages
 - C++
