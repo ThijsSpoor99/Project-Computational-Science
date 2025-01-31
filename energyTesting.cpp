@@ -4,7 +4,7 @@ int main()
 {
     SolarSystem sim("Data/", 24375, 0.6);
 
-    std::array<int, 3> dtArray = {5, 100};
+    std::array<int, 3> dtArray = {5};
 
     for (int i = 0; i < 2; i++)
     {
@@ -15,7 +15,7 @@ int main()
         sim.dt = dtArray[i];
 
         auto startTime = std::chrono::high_resolution_clock::now();
-        for (int t = dtArray[i]; t < 1e7; t += dtArray[i])
+        for (int t = dtArray[i]; t < 2e7; t += dtArray[i])
         {
             sim.performTimestep();
             sim.calcSystemEnergy();

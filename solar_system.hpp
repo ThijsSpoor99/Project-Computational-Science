@@ -13,6 +13,10 @@
 
 #include "Include\util.hpp"
 
+
+// -------------------------------------------------
+// The class for sun and planets
+// -------------------------------------------------
 class Celestial
 {
 public:
@@ -44,6 +48,9 @@ public:
     }
 };
 
+// -------------------------------------------------
+// The class for the Centaur asteroids
+// -------------------------------------------------
 class Centaur
 {
 public:
@@ -71,6 +78,10 @@ public:
     }
 };
 
+// -------------------------------------------------
+// The simulation class. Only stores the information for the current timestep. 
+// Simulation itself is preferably called in a different c++ file which also saves the information of all steps (if necessary).
+// -------------------------------------------------
 class SolarSystem
 {
 public:
@@ -80,9 +91,11 @@ public:
     int dt = 1;
     double bias;
 
+    // vector to hold simulated objects
     std::vector<Celestial> celestials;
     std::vector<Centaur> centaurs;
-
+    
+    // vector to store imported initial state data
     std::vector<std::vector<std::string>> celestialData;
     std::vector<std::vector<std::string>> centaurData;
 
@@ -97,10 +110,13 @@ public:
     double GMrCubed = 0.0;
     double tempEnergy = 0.0;
 
+    // total energy of the (sub)system
+    // in current model all 3 should be constant
     double celestialEnergy = 0.0;
     double centaurEnergy = 0.0;
     double totalEnergy = 0.0;
 
+    // track hypothesis information
     int nImpacts = 0;
     int nInner = 0;
     int nOuter = 0;
@@ -109,8 +125,11 @@ public:
     double innerBoundary = 2 * Constants::AU * 1.0e-3;
     double outerBoundary = 1000.0 * Constants::AU * 1.0e-3;
 
+    // constructor
+    SolarSystem() = default;
     SolarSystem(const std::string& inputPath = "Data\\", int inputNCentaurs = 24375, double inputBias = 0.8) 
         : pathToData(inputPath), nCentaurs(inputNCentaurs), bias(inputBias) {
+
         // create celestials
         celestialData = readCSV(pathToData + "celestialData.csv");
         nCelestials = celestialData.size();
@@ -158,6 +177,8 @@ public:
         // calculate all energies at t=0
         calcSystemEnergy();
         
+        // store initial energy for impacted (removed) asteroids
+        // close encounters with planets do not conserve energy with the used integrator
         for (int i = 0; i < nCentaurs; i++) {
             centaurs[i].initialEnergy = centaurs[i].totalEnergy;
         }
@@ -167,6 +188,7 @@ public:
     // Reset the simulation to the initial state (similar to constructor)
     // -------------------------------------------------
     void resetSimulation() {
+
         // reset celestials
         celestials = {};
         for (int i = 0; i < nCelestials; i++)
@@ -211,6 +233,7 @@ public:
             centaurs[i].initialEnergy = centaurs[i].totalEnergy;
         }
 
+        // reset hypothesis counters
         nInner = 0;
         nOuter = 0;
         nImpacts = 0;
@@ -244,6 +267,7 @@ public:
     // Compute the net acceleration for the given centaur index
     // -------------------------------------------------
     void computeCentaurAcceleration(int &i) {
+
         // acceleration from celestials
         centaurs[i].acceleration = {0.0, 0.0, 0.0};
         for (int j=0; j<nCelestials; j++) {
@@ -258,6 +282,7 @@ public:
                 std::cout << "Impact with " << celestials[j].name << " at i=" << i << std::endl;
             }
 
+            // update acceleration
             GMrCubed = celestials[j].GM / (rNorm * rNorm * rNorm);
             centaurs[i].acceleration[0] -= GMrCubed * rVec[0];
             centaurs[i].acceleration[1] -= GMrCubed * rVec[1];
@@ -271,7 +296,7 @@ public:
     void updateCelestials() {
         for (int i=0; i<nCelestials; i++)
         {
-            // half velocity step
+            // first half velocity step
             celestials[i].velocity[0] += 0.5 * dt * celestials[i].acceleration[0];
             celestials[i].velocity[1] += 0.5 * dt * celestials[i].acceleration[1];
             celestials[i].velocity[2] += 0.5 * dt * celestials[i].acceleration[2];
@@ -299,11 +324,13 @@ public:
     // -------------------------------------------------
     void updateCentaurs() {
         for (int i=0; i<nCentaurs; i++) {
+
             // check if centaur still needs to be updated
             if (!centaurs[i].exist) {
                 continue;
             }
 
+            // check if centaur has entered inner region of solar system
             rVec = subtract3D(centaurs[i].position, celestials[0].position);
             rNorm = calcNorm(rVec);
             if (rNorm < innerBoundary) {
@@ -312,13 +339,14 @@ public:
                 nInner += 1;
             }
 
+            // check if centaur has 'left' the solar system
             if (rNorm > outerBoundary) {
                 centaurs[i].outer = true;
                 centaurs[i].exist = false;
                 nOuter += 1;
             }
 
-            // half velocity step
+            // first half velocity step
             centaurs[i].velocity[0] += 0.5 * dt * centaurs[i].acceleration[0];
             centaurs[i].velocity[1] += 0.5 * dt * centaurs[i].acceleration[1];
             centaurs[i].velocity[2] += 0.5 * dt * centaurs[i].acceleration[2];
@@ -344,6 +372,7 @@ public:
     // Compute the energy for the given celestial index
     // -------------------------------------------------
     void calcCelestialEnergy(int &i) {
+
         // kinetic
         celestials[i].kineticEnergy = 0.5 * celestials[i].mass * calcSquare(celestials[i].velocity);
         
@@ -370,6 +399,7 @@ public:
     // Compute the energy for the given centaur index
     // -------------------------------------------------
     void calcCentaurEnergy(int &i) {
+
         // kinetic
         // centaurs have neglible mass (m=1 for easy calculation)    
         centaurs[i].kineticEnergy = 0.5 * calcSquare(centaurs[i].velocity);
@@ -390,6 +420,7 @@ public:
     // Compute the energy of the system (celestials, centaurs & total)
     // -------------------------------------------------
     void calcSystemEnergy() {
+        
         // energy from celestials
         celestialEnergy = 0.0;
         for (int i=0; i<nCelestials; i++) {
