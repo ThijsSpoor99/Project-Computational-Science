@@ -1,7 +1,7 @@
 # Influence of Jupiter-like Planets on Centaur Transits to the Inner Solar System
 This repository is for the course "Project Computational Science" at the University of Amsterdam.
 For a quick overview of the project we refer to ([Poster PCS Team 8.pdf](Poster%20PCS%20Team%208.pdf)). For a more detailled description of
-the project, we refer to ([Report](Poster%20PCS%20Team%208.pdf)).
+the project, we refer to ([Report](Report.pdf)).
 
 #### Structure and brief description
 - __Archive\\__ > contains code among other things which are not used anymore in the final version
