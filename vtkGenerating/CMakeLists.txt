@@ -1,3 +1,24 @@
+# CMake configuration for the VTK example: solar_system_animateVTK
+#
+# This script sets up the build process for an executable that animates the 
+# solar system using the VTK library. 
+#
+# Requirements:
+# - VTK library must be installed.
+# - Ensure the VTK lib and include directories are properly set in the system path.
+#
+# This CMake configuration:
+# - Sets up a C++17 project.
+# - Applies compiler-specific optimizations.
+# - Finds and links the required VTK libraries.
+#
+# The workflow is as follows:
+# - create a build directory and navigate to it.
+# - run cmake .. to configure the project.
+# - run cmake --build . to build the project. (some warnings may appear, but they can be ignored)
+# - navigate to Debug/Release directory and run the executable.
+
+
 cmake_minimum_required(VERSION 3.10)
 
 # Set the project name and language
