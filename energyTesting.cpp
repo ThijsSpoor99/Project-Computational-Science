@@ -1,4 +1,4 @@
-/* 
+/*
 This program calculates the total Centaur energy over time and saves it as a csv file.
 */
 
@@ -32,7 +32,7 @@ int main()
 
         std::cout << "Simulation time: " << duration.count() << " seconds" << std::endl;
 
-        std::string filepath = "Data/energyTesting/centaurEnergy" + std::to_string(dtArray[i]) + "dt.csv";
+        std::string filepath = "Data/energyTesting/centaurEnergy_" + std::to_string(dtArray[i]) + "dt.csv";
         save1DVector(centaurEnergy, filepath);
     }
 

@@ -1,0 +1,10 @@
+The following is a short description explaining how to reproduce the centaurEnergy.png figure located in 'Figures/' 
+
+1. Ensure all prerequisites listed in the repository are fulfilled.
+2. Open the file 'energyTesting.cpp', located in the main directory and execute the code. This will generate a CSV file containing the Centaur energies for 2e7 steps with dt=5. 
+   a) The generated file is called 'centaurEnergy_5dt.csv' and will be generated to the directory 'Data/energyTesting/'
+   b) Note that the generated file is quite large (approx. 150MB). If you encounter issues, simulate for a shorter time period and verify the results against our csv located in the google drive.
+3. Open the 'hypothesisTesting.ipynb' file located in the main directory and run the first cell to import packages and additional QoL modifications.
+   a) If you completed 2.a, please input 'Data/energyTesting/centaurEnergy_5dt' to the filepath in the third cell
+   b) If you downloaded the csv file from the google drive, please input your path to the file.
+4. Execute the code in the fourth cell (alternatively you can run the entire .ipynb file, if you wish). The generated figure can be seen in the .ipynb file and will also be saved to 'Figures/'
