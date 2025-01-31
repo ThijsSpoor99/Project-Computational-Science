@@ -1,7 +1,7 @@
 # Influence of Jupiter-like Planets on Centaur Transits to the Inner Solar System
 This repository is for the course "Project Computational Science" at the University of Amsterdam.
-For a quick overview of the project we refer to (poster pdf location). For a more detailled description of
-the project, we refer to (report-file location).
+For a quick overview of the project we refer to ([Poster PCS Team 8.pdf](Poster%20PCS%20Team%208.pdf)). For a more detailled description of
+the project, we refer to ([Report](Poster%20PCS%20Team%208.pdf)).
 
 #### Structure and brief description
 - __Archive\\__ > contains code among other things which are not used anymore in the final version
@@ -33,7 +33,7 @@ for different Jupiter masses and saves them separately as csv files
 > g++.exe -fdiagnostics-color=always -O3 -march=native -std=c++17 {filepath_to_compile} -o {filepath_to_save_.exe} -g
 
 ## google drive:
-For large files like the made animations using ParaView, and the data used for these animations we refer to our google drive
+For large files, like the made animations using ParaView, and the data used for these animations we refer to our google drive
 > https://drive.google.com/drive/folders/1oEzvrlVWRl6ETvyb8Z7ytmVTRoND0eae?usp=sharing
 
 ### planet- & celestialData source
