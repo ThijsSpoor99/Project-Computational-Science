@@ -1,18 +1,7 @@
 #ifndef solarSystem_HPP
 #define solarSystem_HPP
 
-#include <array>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <filesystem>
-#include <cmath>
-#include <chrono>
-
 #include "Include\util.hpp"
-
 
 // -------------------------------------------------
 // The class for sun and planets
@@ -279,7 +268,7 @@ public:
                 centaurs[i].exist = false;
                 nImpacts += 1;
                 centaurs[i].totalEnergy = centaurs[i].initialEnergy;
-                std::cout << "Impact with " << celestials[j].name << " at i=" << i << std::endl;
+                std::cout << "Centaur (i=" << i << ") impact with " << celestials[j].name << std::endl;
             }
 
             // update acceleration
@@ -420,7 +409,7 @@ public:
     // Compute the energy of the system (celestials, centaurs & total)
     // -------------------------------------------------
     void calcSystemEnergy() {
-        
+
         // energy from celestials
         celestialEnergy = 0.0;
         for (int i=0; i<nCelestials; i++) {

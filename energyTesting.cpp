@@ -1,12 +1,17 @@
+/* 
+This program calculates the total Centaur energy over time and saves it as a csv file.
+*/
+
 #include "solar_system.hpp"
 
 int main()
 {
     SolarSystem sim("Data/", 24375, 0.6);
 
+    // dt's to calc energy for
     std::array<int, 3> dtArray = {5};
 
-    for (int i = 0; i < 2; i++)
+    for (size_t i = 0; i < dtArray.size(); i++)
     {
         sim.resetSimulation();
         std::vector<double> centaurEnergy = {};
@@ -15,7 +20,7 @@ int main()
         sim.dt = dtArray[i];
 
         auto startTime = std::chrono::high_resolution_clock::now();
-        for (int t = dtArray[i]; t < 2e7; t += dtArray[i])
+        for (size_t t = dtArray[i]; t < size_t(2e7); t += dtArray[i])
         {
             sim.performTimestep();
             sim.calcSystemEnergy();

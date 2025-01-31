@@ -1,7 +1,13 @@
+/* 
+This program calculates the inner, outer and impact Centaur asteroids over time in our simulation
+for different Jupiter masses and saves them separately as csv files.
+*/
+
 #include "solar_system.hpp"
 
 int main()
 {
+    // create simulation class
     SolarSystem sim("Data\\", 24375, 0.6);
     sim.dt = 5;
 
@@ -10,11 +16,13 @@ int main()
     std::vector<int> nOuter(nSteps);
     std::vector<int> nImpacts(nSteps);
 
+    // perform simulation for every Jupiter mass
     for (double factor = 0.0; factor < 2.1; factor += 0.20)
     {
-        sim.resetSimulation(); // to be sure
+        sim.resetSimulation();
         sim.celestials[3].GM *= factor;
 
+        // set t=0
         nInner[0] = 0;
         nOuter[0] = 0;
 
