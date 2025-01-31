@@ -17,6 +17,7 @@ for different Jupiter masses and saves them separately as csv files
 - _planetVisualisation.ipynb_ > creates visualisations for checking accuracy of planets
 - _processCentaurs.ipynb_ > clones Centaurs and creates visualisations of the cloning process
 - _solar\_system.hpp_ > the c++ header file that contains the basis classes for running the simulation
+- _Code_review.txt_ > Brief explanation of steps to generate energyTesting.png file in the __Figures\\__ directory
 
 ### Dependencies
 - C++
